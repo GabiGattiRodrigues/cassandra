@@ -1,0 +1,7 @@
+# base bruta (44 MB) - baixada pelo prep/00_baixar.py
+data/*.xlsx
+data/*.pkl
+__pycache__/
+*.pyc
+.streamlit/secrets.toml
+.venv/

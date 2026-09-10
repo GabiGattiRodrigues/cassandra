@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="760" height="210" role="img" aria-label="Cassandra">
+  <defs>
+    <radialGradient id="orbe" cx="36%" cy="28%" r="80%">
+      <stop offset="0%"  stop-color="#5598e7"/>
+      <stop offset="50%" stop-color="#256abf"/>
+      <stop offset="100%" stop-color="#0d366b"/>
+    </radialGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a78d6"/>
+      <stop offset="100%" stop-color="#0d366b"/>
+    </linearGradient>
+    <clipPath id="dentro"><circle cx="102" cy="90" r="68"/></clipPath>
+    <filter id="brilho" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- pedestal -->
+  <path d="M74 166 q28 12 56 0 l11 21 q-39 12 -78 0 z" fill="url(#base)"/>
+  <ellipse cx="102" cy="165" rx="31" ry="7" fill="#0d366b"/>
+
+  <!-- esfera -->
+  <circle cx="102" cy="90" r="68" fill="url(#orbe)"/>
+
+  <g clip-path="url(#dentro)">
+    <!-- constelacao, so no alto -->
+    <path d="M46 42 L72 26 L104 32" fill="none" stroke="#cde2fb"
+          stroke-width="1" opacity=".22"/>
+    <g fill="#cde2fb" opacity=".38">
+      <circle cx="46" cy="42" r="2"/><circle cx="72" cy="26" r="1.5"/>
+      <circle cx="104" cy="32" r="2.1"/>
+      <circle cx="44" cy="104" r="1.5"/><circle cx="150" cy="126" r="1.6"/>
+    </g>
+
+    <!-- a curva: trecho cheio = realizado, trecho pontilhado = previsto -->
+    <path d="M42 128 L68 119 L94 106 L118 96" fill="none" stroke="#ffffff"
+          stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+          filter="url(#brilho)"/>
+    <path d="M118 96 L142 74 L168 46" fill="none" stroke="#ffffff"
+          stroke-width="6" stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="7 11" opacity=".92"/>
+    <circle cx="118" cy="96" r="7" fill="#ffffff"/>
+    <circle cx="118" cy="96" r="13.5" fill="none" stroke="#ffffff"
+            stroke-width="1.6" opacity=".45"/>
+
+    <!-- reflexo -->
+    <ellipse cx="72" cy="50" rx="27" ry="16" fill="#ffffff" opacity=".15"
+             transform="rotate(-28 72 50)"/>
+  </g>
+  <circle cx="102" cy="90" r="68" fill="none" stroke="#cde2fb"
+          stroke-width="1.5" opacity=".35"/>
+
+  <!-- wordmark -->
+  <text x="204" y="96" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+        font-size="52" font-weight="700" fill="#0d366b" letter-spacing="1.2">CASSANDRA</text>
+  <text x="207" y="126" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+        font-size="16" font-weight="500" fill="#52514e" letter-spacing=".4">previsão de safras · CLV com BG/NBD + Gamma-Gamma</text>
+  <rect x="207" y="140" width="60" height="4" rx="2" fill="#2a78d6"/>
+  <rect x="273" y="140" width="13" height="4" rx="2" fill="#86b6ef"/>
+  <rect x="292" y="140" width="13" height="4" rx="2" fill="#86b6ef"/>
+  <rect x="311" y="140" width="13" height="4" rx="2" fill="#86b6ef"/>
+</svg>

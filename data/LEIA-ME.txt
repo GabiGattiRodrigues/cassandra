@@ -1,0 +1,2 @@
+A base bruta (44 MB) nao entra no repositorio.
+Rode: .venv\Scripts\python prep\00_baixar.py

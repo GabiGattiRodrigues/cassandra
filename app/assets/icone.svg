@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Cassandra">
+  <defs>
+    <radialGradient id="o" cx="38%" cy="30%" r="78%">
+      <stop offset="0%"  stop-color="#5598e7"/>
+      <stop offset="52%" stop-color="#256abf"/>
+      <stop offset="100%" stop-color="#0d366b"/>
+    </radialGradient>
+    <clipPath id="c"><circle cx="100" cy="94" r="76"/></clipPath>
+    <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="7" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="200" height="200" rx="44" fill="#f2f7fe"/>
+  <path d="M68 178 q32 13 64 0 l8 14 q-40 12 -80 0 z" fill="#0d366b"/>
+  <circle cx="100" cy="94" r="76" fill="url(#o)"/>
+  <g clip-path="url(#c)">
+    <g fill="#cde2fb" opacity=".38">
+      <circle cx="48" cy="46" r="2.4"/><circle cx="80" cy="30" r="1.8"/>
+      <circle cx="134" cy="38" r="2.2"/>
+      <circle cx="44" cy="118" r="1.9"/><circle cx="150" cy="132" r="2"/>
+    </g>
+    <path d="M48 46 L80 30 L134 38 L158 70" fill="none" stroke="#cde2fb"
+          stroke-width="1.2" opacity=".3"/>
+    <path d="M38 134 L66 122 L94 108 L118 98" fill="none" stroke="#ffffff"
+          stroke-width="7" stroke-linecap="round" stroke-linejoin="round"
+          filter="url(#g)"/>
+    <path d="M118 98 L146 72 L172 38" fill="none" stroke="#cde2fb"
+          stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="8 12" opacity=".92"/>
+    <circle cx="118" cy="98" r="8" fill="#ffffff"/>
+    <circle cx="118" cy="98" r="15" fill="none" stroke="#ffffff"
+            stroke-width="1.8" opacity=".45"/>
+    <ellipse cx="70" cy="52" rx="30" ry="18" fill="#ffffff" opacity=".16"
+             transform="rotate(-28 70 52)"/>
+  </g>
+  <circle cx="100" cy="94" r="76" fill="none" stroke="#cde2fb"
+          stroke-width="1.8" opacity=".35"/>
+</svg>

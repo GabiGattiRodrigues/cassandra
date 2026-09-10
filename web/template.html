@@ -1,0 +1,1730 @@
+<title>Cassandra</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f4f6f9; --surface:#ffffff; --surface-2:#eef2f7; --linha:#dde4ee;
+  --ink:#0e1420; --ink-2:#4c5769; --ink-3:#7d8798;
+  --b0:#0d366b; --b1:#256abf; --b2:#5598e7; --b3:#9cc3f2; --b-wash:#e6eefb;
+  --acento:#256abf; --alerta:#b4530f;
+  --grade:#e7ecf3; --sombra:0 1px 2px rgba(14,20,32,.05);
+  --r:10px;
+  --f-disp:"Archivo","Archivo Black",system-ui,sans-serif;
+  --f-corpo:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,"SFMono-Regular",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0d1117; --surface:#151b24; --surface-2:#1c242f; --linha:#2a3441;
+    --ink:#eef3f9; --ink-2:#a9b4c4; --ink-3:#7a8698;
+    --b0:#7fb0ee; --b1:#4a8fdf; --b2:#2f6fc4; --b3:#20507f; --b-wash:#182636;
+    --acento:#5b9cea; --alerta:#e08a4a;
+    --grade:#232c38; --sombra:0 1px 2px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0d1117; --surface:#151b24; --surface-2:#1c242f; --linha:#2a3441;
+  --ink:#eef3f9; --ink-2:#a9b4c4; --ink-3:#7a8698;
+  --b0:#7fb0ee; --b1:#4a8fdf; --b2:#2f6fc4; --b3:#20507f; --b-wash:#182636;
+  --acento:#5b9cea; --alerta:#e08a4a;
+  --grade:#232c38; --sombra:0 1px 2px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+     font:400 15px/1.55 var(--f-corpo);-webkit-font-smoothing:antialiased}
+.env{max-width:1280px;margin:0 auto;padding-inline:20px;padding-block:22px 56px}
+h1,h2,h3{font-family:var(--f-disp);font-weight:700;letter-spacing:-.018em;
+         text-wrap:balance;margin:0}
+a{color:var(--acento)}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+/* ---------- topo ---------- */
+.topo{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap;
+      justify-content:space-between;margin-bottom:20px}
+.topo h1{font-size:clamp(28px,4.4vw,40px);line-height:1.02}
+.topo p{margin:8px 0 0;color:var(--ink-2);max-width:56ch;font-size:15px}
+.marca{display:flex;align-items:center;gap:12px}
+.marca svg{flex:none}
+.selo{font-family:var(--f-num);font-size:11px;letter-spacing:.08em;
+      text-transform:uppercase;color:var(--ink-3);border:1px solid var(--linha);
+      border-radius:99px;padding:4px 11px;background:var(--surface)}
+
+/* ---------- painel de controle ---------- */
+.console{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start}
+@media(max-width:900px){.console{grid-template-columns:1fr}}
+.rail{background:var(--surface);border:1px solid var(--linha);border-radius:var(--r);
+      padding:16px;display:flex;flex-direction:column;gap:18px;box-shadow:var(--sombra)}
+@media(min-width:901px){.rail{position:sticky;top:18px}}
+.campo{display:flex;flex-direction:column;gap:7px}
+.rot{font-family:var(--f-num);font-size:10.5px;letter-spacing:.09em;
+     text-transform:uppercase;color:var(--ink-3)}
+.ajuda{font-size:12.5px;color:var(--ink-3);line-height:1.45;margin:0}
+
+/* trilho da data de corte: e a interacao principal, entao parece uma linha do tempo */
+.trilho{position:relative;padding:16px 6px 4px}
+.trilho .via{height:3px;background:var(--linha);border-radius:2px;position:relative}
+.trilho .feito{position:absolute;left:0;top:0;height:3px;background:var(--b1);
+               border-radius:2px;transition:width .18s ease}
+.paradas{display:flex;justify-content:space-between;margin-top:-8px}
+.parada{appearance:none;border:0;background:transparent;padding:0;cursor:pointer;
+        display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+.parada i{width:13px;height:13px;border-radius:99px;background:var(--surface);
+          border:2.5px solid var(--linha);display:block;transition:.15s}
+.parada.on i{border-color:var(--b1);background:var(--b1);
+             box-shadow:0 0 0 4px color-mix(in srgb,var(--b1) 18%,transparent)}
+.parada.antes i{border-color:var(--b1)}
+.parada span{font-family:var(--f-num);font-size:10.5px;color:var(--ink-3);
+             white-space:nowrap}
+.parada.on span{color:var(--ink);font-weight:500}
+.parada:focus-visible{outline:2px solid var(--acento);outline-offset:3px;border-radius:6px}
+
+select,input[type=number]{font:inherit;font-size:14px;color:var(--ink);
+  background:var(--surface);border:1px solid var(--linha);border-radius:8px;
+  padding:8px 10px;width:100%}
+select:focus-visible,input:focus-visible{outline:2px solid var(--acento);outline-offset:1px}
+input[type=range]{width:100%;accent-color:var(--b1)}
+
+.fichas{display:flex;flex-wrap:wrap;gap:6px}
+.alterna{display:flex;align-items:center;gap:8px;font-size:13.5px;
+         color:var(--ink);cursor:pointer}
+.alterna input{width:16px;height:16px;accent-color:var(--b1);cursor:pointer}
+.ficha{appearance:none;font:inherit;font-size:12.5px;cursor:pointer;
+       border:1px solid var(--linha);background:var(--surface);color:var(--ink-2);
+       border-radius:99px;padding:5px 11px;transition:.14s}
+.ficha[aria-pressed="true"]{background:var(--b-wash);border-color:var(--b1);
+       color:var(--b0);font-weight:500}
+.ficha:focus-visible{outline:2px solid var(--acento);outline-offset:2px}
+
+/* leitura dos parametros do modelo, em cara de instrumento */
+.leitura{border-top:1px solid var(--linha);padding-top:14px;display:flex;
+         flex-direction:column;gap:8px}
+.par{display:flex;gap:6px;flex-wrap:wrap}
+.par b{font-family:var(--f-num);font-weight:500;font-size:12px;color:var(--ink-2);
+       background:var(--surface-2);border-radius:6px;padding:3px 8px;
+       display:inline-flex;gap:5px}
+.par b i{color:var(--ink-3);font-style:normal}
+
+/* ---------- palco ---------- */
+.palco{display:flex;flex-direction:column;gap:16px;min-width:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--linha);border-radius:var(--r);
+      padding:13px 15px;box-shadow:var(--sombra)}
+.tile .rot{margin-bottom:5px}
+.tile .v{font-family:var(--f-disp);font-size:25px;font-weight:700;line-height:1.15;
+         letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12px;color:var(--ink-3);margin-top:3px;line-height:1.35}
+
+.abas{display:flex;gap:2px;border-bottom:1px solid var(--linha);overflow-x:auto;
+      scrollbar-width:none}
+.abas::-webkit-scrollbar{display:none}
+.aba{appearance:none;border:0;background:transparent;font:inherit;font-size:14px;
+     color:var(--ink-3);padding:10px 14px;cursor:pointer;white-space:nowrap;
+     border-bottom:2px solid transparent;margin-bottom:-1px}
+.aba[aria-selected="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--b1)}
+.aba:focus-visible{outline:2px solid var(--acento);outline-offset:-2px}
+
+.cartao{background:var(--surface);border:1px solid var(--linha);border-radius:var(--r);
+        padding:16px 18px 14px;box-shadow:var(--sombra)}
+.cartao h3{font-size:16px;margin-bottom:2px}
+.cartao .sub{font-size:13px;color:var(--ink-3);margin:2px 0 14px}
+.nota{font-size:13px;color:var(--ink-2);border-left:3px solid var(--b1);
+      background:var(--surface);padding:10px 14px;border-radius:0 8px 8px 0;
+      border-top:1px solid var(--linha);border-right:1px solid var(--linha);
+      border-bottom:1px solid var(--linha)}
+.legenda{display:flex;flex-wrap:wrap;gap:14px;align-items:center;
+         font-size:12.5px;color:var(--ink-2);margin-bottom:10px}
+.legenda i{width:13px;height:13px;border-radius:3px;display:inline-block;
+           margin-right:6px;vertical-align:-2px}
+.graf{width:100%;overflow-x:auto}
+svg{display:block;max-width:100%}
+svg text{font-family:var(--f-num);fill:var(--ink-3)}
+svg text.forte{fill:var(--ink-2)}
+
+/* dica flutuante */
+#dica{position:fixed;pointer-events:none;z-index:50;background:var(--surface);
+      border:1px solid var(--linha);border-radius:8px;padding:8px 11px;
+      font-size:12.5px;line-height:1.5;box-shadow:0 6px 20px rgba(14,20,32,.16);
+      max-width:250px;opacity:0;transition:opacity .1s}
+#dica b{font-family:var(--f-num);font-weight:500}
+
+/* matriz de MAPE */
+.matriz{border-collapse:separate;border-spacing:2px;font-size:12px;
+        font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.matriz th{font-weight:400;color:var(--ink-3);font-size:11px;padding:3px 6px;
+           text-align:center}
+.matriz .subth{font-size:9.5px;color:var(--ink-3);opacity:.75}
+.matriz th.lado{text-align:right;padding-right:9px}
+.matriz td{width:44px;height:28px;text-align:center;border-radius:5px;
+           background:var(--surface-2);color:var(--ink-3)}
+.matriz td.v{font-weight:500}
+.matriz td.margem{background:var(--surface);border:1px solid var(--linha);
+                  color:var(--ink);font-weight:600}
+
+.tabela{width:100%;border-collapse:collapse;font-size:13px;
+        font-variant-numeric:tabular-nums}
+.tabela th,.tabela td{padding:6px 9px;text-align:right;
+                      border-bottom:1px solid var(--grade)}
+.tabela th{font-family:var(--f-num);font-size:11px;font-weight:400;
+           color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.tabela.simbolos th{text-transform:none;font-size:12px}
+.tabela th:first-child,.tabela td:first-child{text-align:left}
+details>summary{cursor:pointer;font-size:13px;color:var(--ink-2);
+                padding:8px 0;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"▸ ";color:var(--ink-3)}
+details[open]>summary::before{content:"▾ "}
+
+.prosa{max-width:70ch}
+.prosa h3{font-size:17px;margin:26px 0 8px}
+.prosa h3:first-child{margin-top:4px}
+.prosa p{margin:0 0 12px;color:var(--ink-2)}
+.prosa strong{color:var(--ink);font-weight:600}
+.prosa ul{margin:0 0 12px;padding-left:20px;color:var(--ink-2)}
+.prosa li{margin-bottom:6px}
+.prosa .tabela{margin:6px 0 18px}
+.prosa .tabela td{text-align:left;color:var(--ink-2)}
+.prosa .tabela td:first-child{color:var(--ink);font-weight:500;width:32%}
+
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.duo{grid-template-columns:1fr}}
+.mini{display:flex;flex-direction:column;gap:9px}
+.linhaval{display:flex;justify-content:space-between;align-items:baseline;
+          gap:12px;padding:11px 13px;border:1px solid var(--linha);
+          border-radius:9px;background:var(--surface)}
+.linhaval .m{font-family:var(--f-num);font-size:11px;color:var(--ink-3)}
+.linhaval .g{font-family:var(--f-disp);font-size:20px;font-weight:700;
+             font-variant-numeric:tabular-nums}
+.linhaval .d{font-size:12px;color:var(--ink-3);text-align:right}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="env">
+  <header class="topo">
+    <div>
+      <h1>Cassandra</h1>
+      <p>Quanto uma safra de clientes vai valer em M3, M6 e M12 — CLV com
+         BG/NBD + Gamma-Gamma, com o realizado e o previsto no mesmo gráfico.</p>
+    </div>
+    <div class="marca">
+      <svg width="62" height="62" viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <radialGradient id="o" cx="36%" cy="28%" r="80%">
+            <stop offset="0%" stop-color="#5598e7"/><stop offset="52%" stop-color="#256abf"/>
+            <stop offset="100%" stop-color="#0d366b"/>
+          </radialGradient>
+          <clipPath id="cb"><circle cx="100" cy="94" r="76"/></clipPath>
+        </defs>
+        <path d="M68 178 q32 13 64 0 l8 14 q-40 12 -80 0 z" fill="#0d366b"/>
+        <circle cx="100" cy="94" r="76" fill="url(#o)"/>
+        <g clip-path="url(#cb)">
+          <g fill="#cde2fb" opacity=".38"><circle cx="48" cy="46" r="2.4"/>
+            <circle cx="80" cy="30" r="1.8"/><circle cx="134" cy="38" r="2.2"/></g>
+          <path d="M38 134 L66 122 L94 108 L118 98" fill="none" stroke="#fff"
+                stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M118 98 L146 72 L172 38" fill="none" stroke="#fff"
+                stroke-width="6.5" stroke-linecap="round" stroke-dasharray="8 12"
+                opacity=".92"/>
+          <circle cx="118" cy="98" r="8" fill="#fff"/>
+          <ellipse cx="70" cy="52" rx="30" ry="18" fill="#fff" opacity=".16"
+                   transform="rotate(-28 70 52)"/>
+        </g>
+      </svg>
+      <span class="selo">prévia · Online Retail II</span>
+    </div>
+  </header>
+
+  <div class="console">
+    <aside class="rail">
+      <div class="campo">
+        <span class="rot">Data de corte</span>
+        <p class="ajuda">Tudo até aqui é realizado. Daqui pra frente é o modelo
+           falando. Arraste para trás e veja safras inteiras virarem previsão.</p>
+        <div class="trilho">
+          <div class="via"><div class="feito" id="feito"></div></div>
+          <div class="paradas" id="paradas"></div>
+        </div>
+      </div>
+
+      <div class="campo">
+        <label class="rot" for="metrica">Métrica</label>
+        <select id="metrica"></select>
+      </div>
+
+      <div class="campo">
+        <span class="rot">Tipo de cliente</span>
+        <p class="ajuda">Faixa de ticket na 1ª compra.</p>
+        <div class="fichas" id="tipos"></div>
+      </div>
+
+      <div class="campo">
+        <span class="rot">Região</span>
+        <div class="fichas" id="regioes"></div>
+      </div>
+
+      <div class="campo">
+        <label class="alterna">
+          <input type="checkbox" id="mostrarSim">
+          <span>Incluir a safra simulada nos gráficos</span>
+        </label>
+        <p class="ajuda">A safra que você monta na aba “Simular safra nova”
+           entra como mais uma barra, toda hachurada — ela é 100% previsão.</p>
+      </div>
+
+      <div class="leitura">
+        <span class="rot">Modelo ajustado neste corte</span>
+        <div class="par" id="params"></div>
+        <p class="ajuda" id="diag"></p>
+      </div>
+    </aside>
+
+    <main class="palco">
+      <div class="tiles" id="tiles"></div>
+      <div class="nota" id="notaCorte"></div>
+
+      <div class="abas" role="tablist" id="abas"></div>
+      <section id="conteudo"></section>
+    </main>
+  </div>
+</div>
+<div id="dica" role="status"></div>
+
+<script>
+const DADOS = /*__DADOS__*/null;
+const SVGNS = "http://www.w3.org/2000/svg";
+const $ = (s, r = document) => r.querySelector(s);
+
+/* ------------------------------------------------------------------ dados */
+const IDX = DADOS.idx;
+const COL = {}; DADOS.colunas.forEach((c, i) => COL[c] = i);
+const MESES = [...Array(13).keys()];
+const MARCOS = [0, 3, 6, 12];
+const NOMES_SEG = ["M0", "M0→M3", "M3→M6", "M6→M12"];
+const COR_SEG = ["--b0", "--b1", "--b2", "--b3"];
+
+const METRICAS = {
+  rec_cliente: { rot: "Receita por cliente", moeda: true, soma: true },
+  freq:        { rot: "Frequência de compra", moeda: false, soma: true, casas: 2 },
+  rec_total:   { rot: "Receita total", moeda: true, soma: true },
+  ticket:      { rot: "Ticket médio", moeda: true, soma: false },
+};
+
+const FAIXAS = [
+  [0, 5,  "--b3", "Até 5% — no alvo"],
+  [5, 10, "--b2", "5% a 10% — erro baixo"],
+  [10, 20,"--b1", "10% a 20% — dá pra planejar"],
+  [20, 1e9, "--b0", "Acima de 20% — não usar sozinho"],
+];
+
+const estado = {
+  corte: IDX.corte.length - 1,
+  metrica: "rec_cliente",
+  tipos: new Set(IDX.tipo.keys ? [...IDX.tipo.keys()] : IDX.tipo.map((_, i) => i)),
+  regioes: new Set(IDX.regiao.map((_, i) => i)),
+  aba: 0,
+  mSel: 12,
+  ate: 12,
+  mostrarSim: false,
+  linhas: null,
+  tm0: null,
+  nCli: 500,
+  elast: null,
+};
+
+const fmtBR = (v, casas = 0) =>
+  v.toLocaleString("pt-BR", { minimumFractionDigits: casas,
+                              maximumFractionDigits: casas });
+function fmtMetrica(v, chave = estado.metrica) {
+  const m = METRICAS[chave];
+  if (!isFinite(v)) return "—";
+  return (m.moeda ? "R$ " : "") + fmtBR(v, m.casas ?? 0);
+}
+const mesRot = s => {
+  const [a, m] = s.split("-");
+  return ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"][+m-1]
+         + "/" + a;
+};
+const cor = n => getComputedStyle(document.documentElement)
+                 .getPropertyValue(n).trim();
+
+/* ------------------------------------------------- agregacao sobre o cubo */
+function agregar(corteIdx = estado.corte) {
+  const fora = new Map();                       // "safra|m" -> acumuladores
+  for (const L of DADOS.linhas) {
+    if (L[COL.corte] !== corteIdx) continue;
+    if (!estado.tipos.has(L[COL.tipo])) continue;
+    if (!estado.regioes.has(L[COL.regiao])) continue;
+    const k = L[COL.safra] + "|" + L[COL.m];
+    let a = fora.get(k);
+    if (!a) { a = { safra: IDX.safra[L[COL.safra]], m: L[COL.m], clientes: 0,
+                    tr: 0, rr: 0, tp: 0, rp: 0, obs: 0 }; fora.set(k, a); }
+    a.clientes += L[COL.clientes]; a.tr += L[COL.tr]; a.rr += L[COL.rr];
+    a.tp += L[COL.tp]; a.rp += L[COL.rp]; a.obs += L[COL.obs];
+  }
+  const saida = new Map();                      // safra -> array por m
+  for (const a of fora.values()) {
+    const trans = a.tr + a.tp, rec = a.rr + a.rp;
+    const o = {
+      safra: a.safra, m: a.m, clientes: a.clientes,
+      rec_cliente: rec / a.clientes, rec_total: rec,
+      freq: trans / a.clientes,
+      ticket: trans > 0 ? rec / trans : 0,
+      rec_cliente_real: a.rr / a.clientes, rec_total_real: a.rr,
+      freq_real: a.tr / a.clientes,
+      ticket_real: a.tr > 0 ? a.rr / a.tr : 0,
+      fracObs: a.obs / a.clientes,
+    };
+    if (!saida.has(o.safra)) saida.set(o.safra, []);
+    saida.get(o.safra)[o.m] = o;
+  }
+  const ord = new Map([...saida.entries()].sort((x, y) => x[0] < y[0] ? -1 : 1));
+  if (estado.mostrarSim && corteIdx === estado.corte) {
+    sincronizarSimulador();
+    ord.set(NOME_SIM, serieSimulada());
+  }
+  return ord;
+}
+
+const NOME_SIM = "Simulada";
+
+/** A safra simulada como se fosse mais uma linha do agregado: 100% previsão,
+ *  então tudo que é "_real" fica zerado e ela sai hachurada em todo gráfico. */
+function serieSimulada() {
+  const sim = simular(), n = estado.nCli;
+  return sim.map(o => ({
+    safra: NOME_SIM, m: o.m, clientes: n,
+    rec_cliente: o.rec_cliente, rec_total: o.rec_total,
+    freq: o.freq, ticket: o.ticket,
+    rec_cliente_real: 0, rec_total_real: 0, freq_real: 0, ticket_real: 0,
+    fracObs: 0,
+  }));
+}
+
+/** M0, ΔM3, ΔM6, ΔM12 — cada pedaço partido em realizado e previsto. */
+function segmentos(serie) {
+  const chave = estado.metrica, real = chave + "_real";
+  let ant = 0, antR = 0, saida = [];
+  MARCOS.forEach((k, j) => {
+    const o = serie[k];
+    const v = o[chave], vr = o[real];
+    saida.push({
+      nome: NOMES_SEG[j], total: v,
+      real: Math.max(vr - antR, 0),
+      prev: Math.max((v - ant) - Math.max(vr - antR, 0), 0),
+      delta: v - ant,
+    });
+    ant = v; antR = vr;
+  });
+  return saida;
+}
+
+/* ------------------------------------------------------------ svg helpers */
+function el(t, a = {}) {
+  const n = document.createElementNS(SVGNS, t);
+  for (const k in a) n.setAttribute(k, a[k]);
+  return n;
+}
+function hachura(defs, id, c) {
+  const p = el("pattern", { id, width: 7, height: 7,
+                            patternTransform: "rotate(45)",
+                            patternUnits: "userSpaceOnUse" });
+  p.appendChild(el("rect", { width: 7, height: 7, fill: cor("--surface") }));
+  p.appendChild(el("rect", { width: 2.6, height: 7, fill: c, opacity: .95 }));
+  defs.appendChild(p);
+}
+const dica = $("#dica");
+function ligarDica(no, html) {
+  no.addEventListener("pointerenter", e => {
+    dica.innerHTML = html; dica.style.opacity = 1; mover(e);
+  });
+  no.addEventListener("pointermove", mover);
+  no.addEventListener("pointerleave", () => dica.style.opacity = 0);
+  function mover(e) {
+    const r = dica.getBoundingClientRect();
+    let x = e.clientX + 14, y = e.clientY - r.height - 12;
+    if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+    if (y < 8) y = e.clientY + 18;
+    dica.style.left = x + "px"; dica.style.top = y + "px";
+  }
+}
+function eixoY(g, esc, x0, x1, casas = 0, moeda = false) {
+  esc.ticks.forEach(t => {
+    g.appendChild(el("line", { x1: x0, x2: x1, y1: esc.y(t), y2: esc.y(t),
+                               stroke: cor("--grade"), "stroke-width": 1 }));
+    const tx = el("text", { x: x0 - 8, y: esc.y(t) + 4, "text-anchor": "end",
+                            "font-size": 10.5 });
+    tx.textContent = (moeda && t >= 1000) ? fmtBR(t / 1000, 1) + "k"
+                                          : fmtBR(t, casas);
+    g.appendChild(tx);
+  });
+}
+function escala(max, alturaUtil, topo) {
+  const passo = Math.pow(10, Math.floor(Math.log10(max || 1)));
+  let p = passo;
+  while (max / p > 6) p *= (p * 2 / passo === 2 || p * 2.5 / passo === 2.5) ? 2 : 2;
+  const teto = Math.ceil(max / p) * p || 1;
+  const ticks = []; for (let t = 0; t <= teto + 1e-9; t += p) ticks.push(t);
+  return { teto, ticks, y: v => topo + alturaUtil * (1 - v / teto) };
+}
+
+/* --------------------------------------------------- 1. barras empilhadas */
+function grafBarras(caixa, dados) {
+  const safras = [...dados.keys()];
+  const L = 54, R = 40, T = 22, B = 46;   // R com folga p/ o rotulo da ponta
+  const larg = Math.max(caixa.clientWidth || 760, safras.length * 44 + L + R);
+  const alt = 430, util = alt - T - B;
+  const svg = el("svg", { width: larg, height: alt,
+                          viewBox: `0 0 ${larg} ${alt}`, role: "img" });
+  const defs = el("defs"); svg.appendChild(defs);
+  COR_SEG.forEach((c, i) => hachura(defs, "h" + i, cor(c)));
+
+  const segs = safras.map(s => segmentos(dados.get(s)));
+  const max = Math.max(...segs.map(a => a[a.length - 1].total));
+  const esc = escala(max * 1.1, util, T);
+  const passo = (larg - L - R) / safras.length;
+  const w = Math.min(passo * .66, 46);
+
+  eixoY(svg, esc, L, larg - R, METRICAS[estado.metrica].casas ?? 0,
+        METRICAS[estado.metrica].moeda);
+  svg.appendChild(el("line", { x1: L, x2: larg - R, y1: esc.y(0), y2: esc.y(0),
+                               stroke: cor("--linha"), "stroke-width": 1 }));
+
+  safras.forEach((s, i) => {
+    const cx = L + passo * (i + .5);
+    let base = 0;
+    segs[i].forEach((sg, j) => {
+      [["real", cor(COR_SEG[j])], ["prev", `url(#h${j})`]].forEach(([campo, fill]) => {
+        const v = sg[campo]; if (v <= 0) return;
+        const y0 = esc.y(base + v), h = Math.max(esc.y(base) - y0, .7);
+        const r = el("rect", { x: cx - w / 2, y: y0, width: w, height: h,
+                               fill, stroke: cor("--surface"), "stroke-width": 1,
+                               rx: 1.5 });
+        ligarDica(r, `<b>${s}</b><br>${sg.nome} · ${campo === "real" ? "realizado" : "previsto"}
+                      : <b>${fmtMetrica(v)}</b><br>
+                      <span style="color:var(--ink-3)">total em M12:
+                      ${fmtMetrica(segs[i][3].total)}</span>`);
+        svg.appendChild(r);
+        base += v;
+      });
+    });
+    const t = el("text", { x: cx, y: esc.y(base) - 7, "text-anchor": "middle",
+                           "font-size": 10, class: "forte" });
+    t.textContent = fmtMetrica(segs[i][3].total);
+    svg.appendChild(t);
+    const lb = el("text", { x: cx, y: alt - B + 18, "text-anchor": "end",
+                            "font-size": 10.5,
+                            transform: `rotate(-42 ${cx} ${alt - B + 18})` });
+    lb.textContent = s;
+    svg.appendChild(lb);
+  });
+  caixa.replaceChildren(svg);
+}
+
+/* --------------------------------- 1b. ticket: camadas de nivel (nao soma) */
+function grafNivel(caixa, dados) {
+  // O ticket de M12 nao e o de M0 mais um pedaco: e uma media que se move e
+  // pode cair. Entao cada marco vira uma camada que vai de zero ate o NIVEL
+  // daquele marco, pintada do M12 para o M0. O topo de cada cor e o ticket
+  // ali, e a barra inteira e a curva do ticket vista de lado.
+  const safras = [...dados.keys()];
+  const L = 54, R = 40, T = 22, B = 46;
+  const larg = Math.max(caixa.clientWidth || 760, safras.length * 44 + L + R);
+  const alt = 430, util = alt - T - B;
+  const svg = el("svg", { width: larg, height: alt, viewBox: `0 0 ${larg} ${alt}` });
+  const defs = el("defs"); svg.appendChild(defs);
+  COR_SEG.forEach((c, i) => hachura(defs, "n" + i, cor(c)));
+
+  const max = Math.max(...safras.flatMap(s => MARCOS.map(k => dados.get(s)[k].ticket)));
+  const esc = escala(max * 1.12, util, T);
+  const passo = (larg - L - R) / safras.length;
+  const w = Math.min(passo * .66, 46);
+
+  eixoY(svg, esc, L, larg - R, 0, true);
+  svg.appendChild(el("line", { x1: L, x2: larg - R, y1: esc.y(0), y2: esc.y(0),
+                               stroke: cor("--linha"), "stroke-width": 1 }));
+  safras.forEach((s, i) => {
+    const cx = L + passo * (i + .5);
+    // do ultimo marco para o primeiro: a camada seguinte pinta por cima
+    [3, 2, 1, 0].forEach(j => {
+      const k = MARCOS[j], o = dados.get(s)[k], obs = o.fracObs > .999;
+      const y = esc.y(o.ticket);
+      const r = el("rect", { x: cx - w / 2, y, width: w,
+                             height: Math.max(esc.y(0) - y, .7), rx: 1.5,
+                             fill: obs ? cor(COR_SEG[j]) : `url(#n${j})`,
+                             stroke: cor("--surface"), "stroke-width": 1 });
+      ligarDica(r, `<b>safra ${s}</b> · nível em M${k}<br>
+                    ticket médio: <b>${fmtMetrica(o.ticket)}</b><br>
+                    <span style="color:var(--ink-3)">${obs ? "realizado" : "previsto"}</span>`);
+      svg.appendChild(r);
+    });
+    // o rotulo vai acima do TOPO da barra, que nem sempre e o M12: quando o
+    // ticket cai ao longo da vida, o nivel mais alto e um marco anterior
+    const topo = Math.max(...MARCOS.map(k => dados.get(s)[k].ticket));
+    const t = el("text", { x: cx, y: esc.y(topo) - 7, "text-anchor": "middle",
+                           "font-size": 10, class: "forte" });
+    t.textContent = fmtMetrica(dados.get(s)[12].ticket);
+    svg.appendChild(t);
+    const lb = el("text", { x: cx, y: alt - B + 18, "text-anchor": "end",
+                            "font-size": 10.5,
+                            transform: `rotate(-42 ${cx} ${alt - B + 18})` });
+    lb.textContent = s; svg.appendChild(lb);
+  });
+  caixa.replaceChildren(svg);
+}
+
+/* ------------------------------------------------------- 2. linhas/safras */
+const PALETA = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100",
+                "#e87ba4", "#008300", "#4a3aa7", "#e34948"];
+function grafLinhas(caixa, dados, safras) {
+  const L = 54, R = 62, T = 20, B = 34;
+  const larg = Math.max(caixa.clientWidth || 720, 520);
+  const alt = 400, util = alt - T - B;
+  const svg = el("svg", { width: larg, height: alt, viewBox: `0 0 ${larg} ${alt}` });
+  const ch = estado.metrica;
+  const max = Math.max(...safras.flatMap(s => MESES.map(k => dados.get(s)[k][ch])));
+  const esc = escala(max * 1.06, util, T);
+  const x = k => L + (larg - L - R) * (k / 12);
+
+  eixoY(svg, esc, L, larg - R, METRICAS[ch].casas ?? 0, METRICAS[ch].moeda);
+  MESES.forEach(k => {
+    if (k % 2 && k !== 12) return;
+    const t = el("text", { x: x(k), y: alt - B + 17, "text-anchor": "middle",
+                           "font-size": 10.5 });
+    t.textContent = "M" + k; svg.appendChild(t);
+  });
+
+  const pontas = [];
+  safras.forEach((s, i) => {
+    const serie = dados.get(s), c = PALETA[i % PALETA.length];
+    const corte = serie.filter(o => o.fracObs > .999).length;
+    const pt = k => `${x(k)},${esc.y(serie[k][ch])}`;
+    if (corte > 1)
+      svg.appendChild(el("polyline", {
+        points: MESES.slice(0, corte).map(pt).join(" "), fill: "none",
+        stroke: c, "stroke-width": 2.2, "stroke-linejoin": "round" }));
+    if (corte < 13)
+      svg.appendChild(el("polyline", {
+        points: MESES.slice(Math.max(corte - 1, 0)).map(pt).join(" "), fill: "none",
+        stroke: c, "stroke-width": 2.2, "stroke-dasharray": "3 5", opacity: .85 }));
+    MESES.forEach(k => {
+      const p = el("circle", { cx: x(k), cy: esc.y(serie[k][ch]), r: 4.5,
+                               fill: k < corte ? c : cor("--surface"),
+                               stroke: c, "stroke-width": 2 });
+      ligarDica(p, `<b>${s}</b> · M${k}<br>${METRICAS[ch].rot}:
+                    <b>${fmtMetrica(serie[k][ch])}</b><br>
+                    <span style="color:var(--ink-3)">${k < corte ? "realizado" : "previsto"}</span>`);
+      svg.appendChild(p);
+    });
+    pontas.push({ y: esc.y(serie[12][ch]), s, c });
+  });
+  // separa os rotulos da ponta que ficariam em cima uns dos outros
+  pontas.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < pontas.length; i++)
+    if (pontas[i].y - pontas[i - 1].y < 13) pontas[i].y = pontas[i - 1].y + 13;
+  pontas.forEach(p => {
+    const t = el("text", { x: x(12) + 9, y: p.y + 4, "font-size": 11, fill: p.c });
+    t.textContent = p.s; svg.appendChild(t);
+  });
+  caixa.replaceChildren(svg);
+}
+
+/* ----------------------------------------------- 3. comparar um M escolhido */
+function grafComparar(caixa, dados, m) {
+  const safras = [...dados.keys()];
+  const L = 54, R = 10, T = 26, B = 46;
+  const larg = Math.max(caixa.clientWidth || 720, safras.length * 40 + L + R);
+  const alt = 390, util = alt - T - B;
+  const svg = el("svg", { width: larg, height: alt, viewBox: `0 0 ${larg} ${alt}` });
+  const defs = el("defs"); svg.appendChild(defs);
+  hachura(defs, "hc", cor("--b0"));
+  // Em M0 a barra e so o realizado: o primeiro mes de vida de qualquer safra
+  // que ja existe ja aconteceu, entao nao ha o que prever ali.
+  const ch = (m === 0) ? estado.metrica + "_real" : estado.metrica;
+  const soReal = m === 0;
+  const vals = safras.map(s => dados.get(s)[m][ch]);
+  const esc = escala(Math.max(...vals) * 1.14, util, T);
+  const passo = (larg - L - R) / safras.length;
+  const w = Math.min(passo * .62, 34);
+
+  eixoY(svg, esc, L, larg - R, METRICAS[estado.metrica].casas ?? 0,
+        METRICAS[estado.metrica].moeda);
+  const media = vals.reduce((a, b) => a + b, 0) / vals.length;
+  svg.appendChild(el("line", { x1: L, x2: larg - R, y1: esc.y(media), y2: esc.y(media),
+                               stroke: cor("--ink-3"), "stroke-width": 1,
+                               "stroke-dasharray": "4 4" }));
+  const tm = el("text", { x: L + 4, y: esc.y(media) - 6, "font-size": 10.5 });
+  tm.textContent = "média " + fmtMetrica(media, estado.metrica);
+  svg.appendChild(tm);
+
+  safras.forEach((s, i) => {
+    const o = dados.get(s)[m], obs = soReal || o.fracObs > .999;
+    const cx = L + passo * (i + .5), y = esc.y(o[ch]);
+    const r = el("rect", { x: cx - w / 2, y, width: w,
+                           height: Math.max(esc.y(0) - y, .7),
+                           fill: obs ? cor("--b0") : "url(#hc)", rx: 2 });
+    ligarDica(r, `<b>${s}</b> · M${m}<br>${METRICAS[estado.metrica].rot}:
+                  <b>${fmtMetrica(o[ch], estado.metrica)}</b><br>
+                  <span style="color:var(--ink-3)">${obs ? "realizado" : "previsto"}</span>`);
+    svg.appendChild(r);
+    const lb = el("text", { x: cx, y: alt - B + 18, "text-anchor": "end",
+                            "font-size": 10.5,
+                            transform: `rotate(-42 ${cx} ${alt - B + 18})` });
+    lb.textContent = s; svg.appendChild(lb);
+  });
+  caixa.replaceChildren(svg);
+}
+
+/* ------------------------------------------------------ 4. MAPE (backtest) */
+function calcularMape() {
+  const prev = agregar(estado.corte);
+  const real = agregar(IDX.corte.length - 1);
+  const ch = estado.metrica;
+  const linhas = [];
+  for (const [s, serie] of prev) {
+    const vr = real.get(s); if (!vr) continue;
+    const cel = MESES.map(k => {
+      const p = serie[k], r = vr[k];
+      if (!p || !r) return null;
+      if (p.fracObs > .999) return null;          // ja era realizado: nao e previsao
+      if (r.fracObs <= .999) return null;         // ainda nao fechou: nao da pra pontuar
+      if (Math.abs(r[ch]) < 1e-9) return null;
+      return (p[ch] - r[ch]) / r[ch] * 100;
+    });
+    if (cel.some(v => v !== null)) linhas.push({ safra: s, cel });
+  }
+  return linhas;
+}
+function faixaDe(v) {
+  const a = Math.abs(v);
+  for (const [lo, hi, c] of FAIXAS) if (a >= lo && a < hi) return c;
+  return FAIXAS[3][2];
+}
+
+/* --------------------------------------------------------- 5. simulador */
+function simular() {
+  const M = DADOS.modelo[IDX.corte[estado.corte]];
+  const razao = estado.tm0 / M.ticket_m0;
+  const ticketRep = M.ticket_recompra * Math.pow(razao, estado.elast);
+  return MESES.map(k => {
+    const rep = M.repeticoes[k];
+    const trans = 1 + rep, rec = estado.tm0 + rep * ticketRep;
+    return { m: k, freq: trans, rec_cliente: rec, ticket: rec / trans,
+             rec_total: rec * estado.nCli, ticketRep };
+  });
+}
+function grafSimulado(caixa, sim, dados) {
+  const fechadas = [...dados.entries()]
+    .filter(([, s]) => s[12].fracObs > .999).map(([k]) => k);
+  const L = 54, R = 14, T = 20, B = 34;
+  const larg = Math.max(caixa.clientWidth || 620, 460);
+  const alt = 380, util = alt - T - B;
+  const svg = el("svg", { width: larg, height: alt, viewBox: `0 0 ${larg} ${alt}` });
+  const faixa = MESES.map(k => {
+    const v = fechadas.map(s => dados.get(s)[k].rec_cliente);
+    return v.length ? { min: Math.min(...v), max: Math.max(...v),
+                        med: v.sort((a, b) => a - b)[Math.floor(v.length / 2)] } : null;
+  });
+  const tetos = [...sim.map(o => o.rec_cliente),
+                 ...faixa.filter(Boolean).map(o => o.max)];
+  const esc = escala(Math.max(...tetos) * 1.08, util, T);
+  const x = k => L + (larg - L - R) * (k / 12);
+  eixoY(svg, esc, L, larg - R, 0, true);
+  MESES.forEach(k => { if (k % 2 && k !== 12) return;
+    const t = el("text", { x: x(k), y: alt - B + 17, "text-anchor": "middle",
+                           "font-size": 10.5 }); t.textContent = "M" + k;
+    svg.appendChild(t); });
+
+  if (faixa.every(Boolean)) {
+    const cima = MESES.map(k => `${x(k)},${esc.y(faixa[k].max)}`);
+    const baixo = MESES.slice().reverse().map(k => `${x(k)},${esc.y(faixa[k].min)}`);
+    svg.appendChild(el("polygon", { points: [...cima, ...baixo].join(" "),
+                                    fill: cor("--b1"), opacity: .14 }));
+    svg.appendChild(el("polyline", {
+      points: MESES.map(k => `${x(k)},${esc.y(faixa[k].med)}`).join(" "),
+      fill: "none", stroke: cor("--b1"), "stroke-width": 1.8,
+      "stroke-dasharray": "5 4" }));
+  }
+  svg.appendChild(el("polyline", {
+    points: sim.map(o => `${x(o.m)},${esc.y(o.rec_cliente)}`).join(" "),
+    fill: "none", stroke: cor("--b0"), "stroke-width": 2.8,
+    "stroke-linejoin": "round" }));
+  sim.forEach(o => {
+    const p = el("circle", { cx: x(o.m), cy: esc.y(o.rec_cliente), r: 4.5,
+                             fill: cor("--b0"), stroke: cor("--surface"),
+                             "stroke-width": 2 });
+    ligarDica(p, `<b>M${o.m}</b><br>simulado: <b>R$ ${fmtBR(o.rec_cliente)}</b>
+                  por cliente<br><span style="color:var(--ink-3)">
+                  ${fmtBR(o.freq, 2)} compras · ticket R$ ${fmtBR(o.ticket)}</span>`);
+    svg.appendChild(p);
+  });
+  caixa.replaceChildren(svg);
+  return fechadas.length;
+}
+function grafElasticidade(caixa) {
+  const pts = DADOS.elasticidade_amostra;
+  const M = DADOS.modelo[IDX.corte[estado.corte]];
+  const L = 48, R = 14, T = 16, B = 40;
+  const larg = Math.max(caixa.clientWidth || 460, 320);
+  const alt = 330, util = alt - T - B;
+  const svg = el("svg", { width: larg, height: alt, viewBox: `0 0 ${larg} ${alt}` });
+  const lx = v => Math.log10(Math.max(v, 1));
+  const xs = pts.map(p => lx(p[0])), ys = pts.map(p => lx(p[1]));
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const X = v => L + (larg - L - R) * (lx(v) - x0) / (x1 - x0);
+  const Y = v => T + util * (1 - (lx(v) - y0) / (y1 - y0));
+  [10, 100, 1000, 10000].forEach(t => {
+    if (lx(t) < x0 || lx(t) > x1) return;
+    svg.appendChild(el("line", { x1: X(t), x2: X(t), y1: T, y2: T + util,
+                                 stroke: cor("--grade") }));
+    const tx = el("text", { x: X(t), y: alt - B + 16, "text-anchor": "middle",
+                            "font-size": 10.5 });
+    tx.textContent = fmtBR(t); svg.appendChild(tx);
+    if (lx(t) >= y0 && lx(t) <= y1) {
+      svg.appendChild(el("line", { x1: L, x2: larg - R, y1: Y(t), y2: Y(t),
+                                   stroke: cor("--grade") }));
+      const ty = el("text", { x: L - 7, y: Y(t) + 4, "text-anchor": "end",
+                              "font-size": 10.5 });
+      ty.textContent = fmtBR(t); svg.appendChild(ty);
+    }
+  });
+  pts.forEach(p => svg.appendChild(el("circle", { cx: X(p[0]), cy: Y(p[1]), r: 2.4,
+                                                  fill: cor("--b1"), opacity: .32 })));
+  const mx = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const my = ys.reduce((a, b) => a + b, 0) / ys.length;
+  const beta = M.elasticidade * Math.log(10) / Math.log(10);
+  const linha = [];
+  for (let i = 0; i <= 40; i++) {
+    const lxv = x0 + (x1 - x0) * i / 40;
+    const lyv = my + beta * (lxv - mx);
+    linha.push(`${L + (larg - L - R) * (lxv - x0) / (x1 - x0)},${T + util * (1 - (lyv - y0) / (y1 - y0))}`);
+  }
+  svg.appendChild(el("polyline", { points: linha.join(" "), fill: "none",
+                                   stroke: cor("--b0"), "stroke-width": 2.4 }));
+  const cap = el("text", { x: L, y: alt - 8, "font-size": 10.5, class: "forte" });
+  cap.textContent = "ticket da 1ª compra (log) →";
+  svg.appendChild(cap);
+  const capy = el("text", { x: 13, y: T + util / 2, "font-size": 10.5,
+                            class: "forte", "text-anchor": "middle",
+                            transform: `rotate(-90 13 ${T + util / 2})` });
+  capy.textContent = "ticket de recompra (log) →";
+  svg.appendChild(capy);
+  caixa.replaceChildren(svg);
+}
+
+/* -------------------------------------------------------------- interface */
+const ABAS = ["Safras", "Comparar um M", "Qualidade da previsão",
+              "Simular safra nova", "Como o modelo foi feito", "Glossário",
+              "O case"];
+
+function montarRail() {
+  const par = $("#paradas"), feito = $("#feito");
+  par.replaceChildren(...IDX.corte.map((c, i) => {
+    const b = document.createElement("button");
+    b.className = "parada" + (i === estado.corte ? " on" : i < estado.corte ? " antes" : "");
+    b.type = "button"; b.id = "corte" + i;
+    b.setAttribute("aria-label", "corte em " + mesRot(c.slice(0, 7)));
+    const mostra = i === 0 || i === IDX.corte.length - 1 || i % 3 === 0;
+    b.innerHTML = `<i></i><span>${mostra ? mesRot(c.slice(0, 7)) : ""}</span>`;
+    b.title = "corte em " + mesRot(c.slice(0, 7));
+    b.onclick = () => { estado.corte = i; sincronizarSimulador(); render(); };
+    return b;
+  }));
+  feito.style.width = (estado.corte / (IDX.corte.length - 1) * 100) + "%";
+
+  const cbx = $("#mostrarSim");
+  if (cbx && !cbx.dataset.pronto) {
+    cbx.dataset.pronto = "1";
+    cbx.checked = estado.mostrarSim;
+    cbx.onchange = () => { estado.mostrarSim = cbx.checked; render(); };
+  }
+
+  const sel = $("#metrica");
+  if (!sel.options.length) {
+    Object.entries(METRICAS).forEach(([k, v]) => sel.add(new Option(v.rot, k)));
+    sel.onchange = () => { estado.metrica = sel.value; render(); };
+  }
+  sel.value = estado.metrica;
+
+  fichas($("#tipos"), IDX.tipo, estado.tipos, "t");
+  fichas($("#regioes"), IDX.regiao, estado.regioes, "r");
+
+  const M = DADOS.modelo[IDX.corte[estado.corte]];
+  $("#params").innerHTML =
+    Object.entries({ r: M.bgnbd.r, "α": M.bgnbd.alpha, a: M.bgnbd.a, b: M.bgnbd.b })
+      .map(([k, v]) => `<b><i>${k}</i>${(+v).toFixed(3)}</b>`).join("");
+  $("#diag").innerHTML =
+    `${fmtBR(M.n_clientes)} clientes · ${Math.round(M.pct_repetidores * 100)}% com
+     recompra · corr(freq, ticket) = ${M.corr >= 0 ? "+" : ""}${M.corr.toFixed(3)}
+     <span style="color:var(--ink-3)">(o Gamma-Gamma pede |corr| &lt; 0,1)</span>`;
+}
+function fichas(caixa, rotulos, conjunto, pre) {
+  caixa.replaceChildren(...rotulos.map((r, i) => {
+    const b = document.createElement("button");
+    b.className = "ficha"; b.type = "button"; b.id = pre + i;
+    b.textContent = r;
+    b.setAttribute("aria-pressed", conjunto.has(i));
+    b.onclick = () => {
+      conjunto.has(i) ? conjunto.delete(i) : conjunto.add(i);
+      if (!conjunto.size) rotulos.forEach((_, j) => conjunto.add(j));
+      _cacheH.clear(); montarRail(); render();
+    };
+    return b;
+  }));
+}
+
+function montarAbas() {
+  $("#abas").replaceChildren(...ABAS.map((t, i) => {
+    const b = document.createElement("button");
+    b.className = "aba"; b.type = "button"; b.role = "tab"; b.id = "aba" + i;
+    b.textContent = t;
+    b.setAttribute("aria-selected", i === estado.aba);
+    b.onclick = () => { estado.aba = i; render(); };
+    return b;
+  }));
+}
+
+function sincronizarSimulador() {
+  const M = DADOS.modelo[IDX.corte[estado.corte]];
+  if (estado.tm0 === null) estado.tm0 = Math.round(M.ticket_m0);
+  if (estado.elast === null) estado.elast = M.elasticidade;
+}
+
+function render() {
+  montarRail(); montarAbas();
+  const dados = agregar();
+  const safras = [...dados.keys()];
+  const ch = estado.metrica;
+
+  // tiles
+  const emM12 = safras.map(s => dados.get(s)[12]);
+  const fechadas = emM12.filter(o => o.fracObs > .999);
+  const abertas = emM12.filter(o => o.fracObs <= .999);
+  const nCli = emM12.reduce((a, o) => a + o.clientes, 0);
+  const recTot = emM12.reduce((a, o) => a + o.rec_total, 0);
+  const recAb = abertas.reduce((a, o) => a + o.rec_total, 0);
+  const cliAb = abertas.reduce((a, o) => a + o.clientes, 0);
+  $("#tiles").innerHTML = [
+    ["Safras na visão", safras.length, fmtBR(nCli) + " clientes"],
+    ["Fechadas em M12", fechadas.length, "realizado completo, sem modelo"],
+    ["Em previsão", abertas.length, "M12 ainda não aconteceu"],
+    ["Receita/cliente em M12", "R$ " + fmtBR(recTot / nCli),
+     abertas.length ? "só as em previsão: R$ " + fmtBR(recAb / cliAb)
+                    : "todas realizadas"],
+  ].map(([r, v, s]) =>
+    `<div class="tile"><div class="rot">${r}</div><div class="v">${v}</div>
+     <div class="s">${s}</div></div>`).join("");
+
+  const corteTxt = mesRot(IDX.corte[estado.corte].slice(0, 7));
+  $("#notaCorte").innerHTML =
+    `Corte em <b class="num">${IDX.corte[estado.corte].split("-").reverse().join("/")}</b>.
+     Cor cheia = o que já aconteceu. Hachura e linha pontilhada = previsão do modelo.`;
+
+  const c = $("#conteudo");
+  c.replaceChildren();
+  ({ 0: abaSafras, 1: abaComparar, 2: abaQualidade, 3: abaSimulador,
+     4: abaModelo, 5: abaGlossario, 6: abaCase })[estado.aba](c, dados, safras);
+}
+
+function cartao(pai, titulo, sub) {
+  const d = document.createElement("div");
+  d.className = "cartao";
+  d.innerHTML = `<h3>${titulo}</h3>${sub ? `<p class="sub">${sub}</p>` : ""}`;
+  pai.appendChild(d);
+  return d;
+}
+function caixaGraf(pai) {
+  const g = document.createElement("div"); g.className = "graf";
+  pai.appendChild(g); return g;
+}
+
+function abaSafras(c, dados, safras) {
+  const soma = METRICAS[estado.metrica].soma;
+  const cd = cartao(c, `${METRICAS[estado.metrica].rot} por safra`,
+    soma ? "Cada barra é uma safra. De baixo para cima: o M0, o que ela somou até M3, até M6 e até M12 — a altura total é o acumulado em M12."
+         : "Ticket médio não é acumulável — o de M12 não é o de M0 mais um pedaço, é uma média que se move e pode até cair. Então cada faixa de cor vai de zero até o nível daquele marco: o topo de cada cor é o ticket ali, e a barra inteira é a curva do ticket vista de lado. O número em cima é o ticket em M12.");
+  const leg = document.createElement("div");
+  leg.className = "legenda";
+  leg.innerHTML = NOMES_SEG.map((n, i) =>
+    `<span><i style="background:${cor(COR_SEG[i])}"></i>${n}</span>`).join("")
+    + `<span style="color:var(--ink-3)">hachura = previsto</span>`;
+  cd.appendChild(leg);
+  const g = caixaGraf(cd);
+  (soma ? grafBarras : grafNivel)(g, dados);
+
+  const cd2 = cartao(c, "Curva de vida, safra a safra",
+    "Linha cheia é o realizado; pontilhada é a previsão. Clique nas safras para trocar.");
+  cd2.style.marginTop = "16px";
+  const escolha = document.createElement("div");
+  escolha.className = "fichas";
+  escolha.style.marginBottom = "12px";
+  if (!estado.linhas) {
+    // espalhadas pelo periodo: assim o grafico abre mostrando safra fechada
+    // (linha cheia) e safra em previsao (pontilhada) ao mesmo tempo
+    const passo = Math.max(Math.floor(safras.length / 5), 1);
+    estado.linhas = new Set(safras.filter((_, i) => i % passo === 0).slice(0, 5));
+  }
+  const sel = [...estado.linhas].filter(s => safras.includes(s));
+  escolha.replaceChildren(...safras.map(s => {
+    const b = document.createElement("button");
+    b.className = "ficha"; b.type = "button"; b.id = "ln" + s;
+    b.textContent = s;
+    b.setAttribute("aria-pressed", estado.linhas.has(s));
+    b.onclick = () => {
+      if (estado.linhas.has(s)) estado.linhas.delete(s);
+      else if (estado.linhas.size < 8) estado.linhas.add(s);
+      render();
+    };
+    return b;
+  }));
+  cd2.appendChild(escolha);
+  const g2 = caixaGraf(cd2);
+  if (sel.length) grafLinhas(g2, dados, sel.sort());
+  else g2.innerHTML = `<p class="ajuda">Escolha ao menos uma safra.</p>`;
+
+  const det = document.createElement("details");
+  det.innerHTML = "<summary>Ver os números</summary>";
+  const t = document.createElement("table");
+  t.className = "tabela";
+  t.innerHTML = "<thead><tr><th>Safra</th><th>Clientes</th>"
+    + MARCOS.map(k => `<th>M${k}</th>`).join("") + "</tr></thead><tbody>"
+    + safras.map(s => `<tr><td>${s}</td><td>${fmtBR(dados.get(s)[0].clientes)}</td>`
+      + MARCOS.map(k => `<td>${fmtMetrica(dados.get(s)[k][estado.metrica])}${
+          dados.get(s)[k].fracObs > .999 ? "" : "*"}</td>`).join("") + "</tr>").join("")
+    + "</tbody>";
+  det.appendChild(t);
+  const p = document.createElement("p");
+  p.className = "ajuda"; p.textContent = "* contém previsão do modelo";
+  det.appendChild(p);
+  cd2.appendChild(det);
+}
+
+function abaComparar(c, dados, safras) {
+  const acum = METRICAS[estado.metrica].soma;
+  const cd = cartao(c, `${acum ? "Acumulado até" : "Nível em"} M${estado.mSel}, safra a safra`,
+    "Trava um mês de vida e compara todas as safras nele.");
+  const ctrl = document.createElement("div");
+  ctrl.className = "fichas";
+  ctrl.style.marginBottom = "12px";
+  ctrl.replaceChildren(...MESES.map(k => {
+    const b = document.createElement("button");
+    b.className = "ficha"; b.type = "button"; b.id = "m" + k;
+    b.textContent = "M" + k;
+    b.setAttribute("aria-pressed", k === estado.mSel);
+    b.onclick = () => { estado.mSel = k; render(); };
+    return b;
+  }));
+  cd.appendChild(ctrl);
+  grafComparar(caixaGraf(cd), dados, estado.mSel);
+  if (estado.mSel === 0) {
+    const av = document.createElement("p");
+    av.className = "ajuda"; av.style.marginTop = "8px";
+    av.textContent = "Em M0 a barra é só o realizado: o primeiro mês de vida de "
+      + "qualquer safra que já existe já aconteceu, então não há o que prever ali.";
+    cd.appendChild(av);
+  }
+
+  const ch = estado.mSel === 0 ? estado.metrica + "_real" : estado.metrica;
+  const ord = safras.slice().sort((a, b) =>
+    dados.get(b)[estado.mSel][ch] - dados.get(a)[estado.mSel][ch]);
+  const melhor = ord[0], pior = ord[ord.length - 1];
+  const tiles = document.createElement("div");
+  tiles.className = "tiles"; tiles.style.marginTop = "16px";
+  tiles.innerHTML = [
+    [`Melhor safra em M${estado.mSel}`, melhor,
+     fmtMetrica(dados.get(melhor)[estado.mSel][ch], estado.metrica)],
+    [`Pior safra em M${estado.mSel}`, pior,
+     fmtMetrica(dados.get(pior)[estado.mSel][ch], estado.metrica)],
+    ["Distância entre elas",
+     (dados.get(melhor)[estado.mSel][ch] / dados.get(pior)[estado.mSel][ch])
+       .toFixed(1) + "×", "quanto a melhor rende sobre a pior"],
+  ].map(([r, v, s]) => `<div class="tile"><div class="rot">${r}</div>
+     <div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+  c.appendChild(tiles);
+}
+
+// Um passo à frente, sempre: com M0..M_{k-1} fechados dá para prever o M_k, e
+// só. Cada célula (safra, M_k) é uma previsão de um mês, feita com tudo que veio
+// antes dela. No backtest isso é a linha com origem = k-1.
+function backtest(regime, ate = 12) {
+  const B = DADOS.backtest, C = {};
+  B.colunas.forEach((c, i) => C[c] = i);
+  const mi = B.metricas.indexOf(estado.metrica);
+  const linhas = new Map();
+  for (const L of B.linhas) {
+    if (L[C.metrica] !== mi) continue;
+    const m = L[C.m], o = L[C.origem];
+    if (m > ate) continue;
+    if (regime === "rolling") { if (o !== m - 1 || m < 1) continue; }
+    else if (o !== regime || m <= regime) continue;
+    const sf = B.safras[L[C.safra]];
+    if (!linhas.has(sf)) linhas.set(sf, {});
+    linhas.get(sf)[m] = { erro: L[C.erro_pct], prev: L[C.previsto],
+                          real: L[C.realizado] };
+  }
+  return new Map([...linhas].sort((a, b) => a[0] < b[0] ? -1 : 1));
+}
+
+function abaQualidade(c) {
+  const cd = cartao(c, "Quanto o modelo erra",
+    "Cada mês é previsto com o que veio antes dele: com M0, M1 e M2 fechados prevê-se o M3; quando o M3 fecha, prevê-se o M4. Uma previsão de um mês por vez, que é como a curva de um cohort é acompanhada. Para cada safra o modelo é reajustado sem nenhum cliente dela (validação cruzada por safra), e cada safra entra até onde ela já fechou — para pontuar o M3 basta ter o M3 fechado, não os 13 meses.");
+
+  const ctrl = document.createElement("div");
+  ctrl.className = "campo"; ctrl.style.marginBottom = "12px";
+  ctrl.innerHTML = `<span class="rot">Até onde mostrar</span>`;
+  const f = document.createElement("div"); f.className = "fichas";
+  f.replaceChildren(...[3, 6, 12].map(k => {
+    const b = document.createElement("button");
+    b.className = "ficha"; b.type = "button"; b.id = "at" + k;
+    b.textContent = "até o M" + k;
+    b.setAttribute("aria-pressed", k === estado.ate);
+    b.onclick = () => { estado.ate = k; render(); };
+    return b;
+  }));
+  ctrl.appendChild(f); cd.appendChild(ctrl);
+
+  const leg = document.createElement("div");
+  leg.className = "legenda";
+  leg.innerHTML = FAIXAS.map(([, , cv, r]) =>
+    `<span><i style="background:${cor(cv)}"></i>${r}</span>`).join("");
+  cd.appendChild(leg);
+
+  const linhas = backtest("rolling", estado.ate);
+  if (!linhas.size) {
+    const p = document.createElement("p");
+    p.className = "ajuda";
+    p.textContent = "Nenhuma safra fechou os 13 meses na base.";
+    cd.appendChild(p); return;
+  }
+
+  const usados = MESES.filter(k => k >= 1 && k <= estado.ate);
+  const g = caixaGraf(cd);
+  const t = document.createElement("table");
+  t.className = "matriz";
+  // quantas safras ja fecharam cada mes: a matriz afina para a direita
+  const nPorMes = {};
+  usados.forEach(k => nPorMes[k] = [...linhas.values()]
+    .filter(cel => cel[k] && cel[k].erro !== null).length);
+  t.innerHTML = "<thead><tr><th class='lado'>safra</th>"
+    + usados.map(k => `<th>M${k}<br><span class="subth">${nPorMes[k]} safras</span></th>`).join("")
+    + "<th style='width:14px'></th><th>média</th></tr></thead>";
+  const tb = document.createElement("tbody");
+  const porMes = {}, todas = [];
+  usados.forEach(k => porMes[k] = []);
+
+  for (const [safra, cel] of linhas) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<th class="lado">${safra}</th>`;
+    const daSafra = [];
+    usados.forEach(k => {
+      const o = cel[k];
+      const td = document.createElement("td");
+      if (!o || o.erro === null) { tr.appendChild(td); return; }
+      const a = Math.abs(o.erro);
+      daSafra.push(a); porMes[k].push(a); todas.push({ ...o, m: k, safra });
+      const cv = cor(faixaDe(o.erro));
+      td.className = "v";
+      td.style.background = cv;
+      td.style.color = a >= 10 ? "#fff" : cor("--ink");
+      td.textContent = a.toFixed(0) + "%";
+      ligarDica(td, `safra <b>${safra}</b> · M${k}
+        <br><span style="color:var(--ink-3)">previsto com M0 até M${k - 1}</span>
+        <br>erro: <b>${a.toFixed(1)}%</b>
+        <br>viés: <b>${o.erro >= 0 ? "+" : ""}${o.erro.toFixed(1)}%</b>
+        <span style="color:var(--ink-3)">(positivo = previu a mais)</span>
+        <br>previsto ${fmtMetrica(o.prev)} · realizado ${fmtMetrica(o.real)}`);
+      tr.appendChild(td);
+    });
+    tr.appendChild(document.createElement("td")).style.background = "transparent";
+    const tdm = document.createElement("td");
+    tdm.className = "margem";
+    tdm.textContent = daSafra.length
+      ? (daSafra.reduce((a, b) => a + b, 0) / daSafra.length).toFixed(1) + "%" : "";
+    tr.appendChild(tdm);
+    tb.appendChild(tr);
+  }
+
+  const vazia = document.createElement("tr");
+  vazia.style.height = "8px";
+  vazia.innerHTML = `<th class="lado"></th>`
+    + usados.map(() => "<td style='background:transparent'></td>").join("")
+    + "<td style='background:transparent'></td><td style='background:transparent'></td>";
+  tb.appendChild(vazia);
+
+  const med = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : NaN;
+  const trm = document.createElement("tr");
+  trm.innerHTML = `<th class="lado">média</th>`
+    + usados.map(k => `<td class="margem">${med(porMes[k]).toFixed(1)}%</td>`).join("")
+    + "<td style='background:transparent'></td>"
+    + `<td class="margem">${med(todas.map(o => Math.abs(o.erro))).toFixed(1)}%</td>`;
+  tb.appendChild(trm);
+  t.appendChild(tb);
+  g.appendChild(t);
+
+  const capt = document.createElement("p");
+  capt.className = "ajuda";
+  capt.textContent = "Abaixo de cada M está quantas safras já fecharam aquele "
+    + "mês — a matriz vai afinando para a direita porque safra recente ainda "
+    + "não chegou lá. A última coluna é o erro médio de cada safra; a última "
+    + "linha é o erro médio de cada mês. O M0 não aparece porque não existe "
+    + "mês fechado antes dele para servir de base.";
+  cd.appendChild(capt);
+
+  const abs = todas.map(o => Math.abs(o.erro));
+  const noFim = todas.filter(o => o.m === estado.ate).map(o => Math.abs(o.erro));
+  const porSafra = [...linhas.keys()].map(sf => ({
+    s: sf, v: med(todas.filter(o => o.safra === sf).map(o => Math.abs(o.erro))) }))
+    .filter(o => isFinite(o.v));
+  const dificil = porSafra.reduce((a, b) => (b.v > a.v ? b : a));
+
+  const tiles = document.createElement("div");
+  tiles.className = "tiles"; tiles.style.marginTop = "16px";
+  tiles.innerHTML = [
+    ["MAPE médio", med(abs).toFixed(1) + "%",
+     `${todas.length} previsões em ${linhas.size} safras`],
+    ["Viés médio", (med(todas.map(o => o.erro)) >= 0 ? "+" : "")
+      + med(todas.map(o => o.erro)).toFixed(1) + "%",
+     "positivo = o modelo previu a mais"],
+    [`MAPE em M${estado.ate}`, noFim.length ? med(noFim).toFixed(1) + "%" : "—",
+     "o mês mais distante desta visão"],
+    ["Safra mais difícil", dificil.s, `erro médio de ${dificil.v.toFixed(1)}%`],
+  ].map(([r, v, sub]) => `<div class="tile"><div class="rot">${r}</div>
+     <div class="v">${v}</div><div class="s">${sub}</div></div>`).join("");
+  c.appendChild(tiles);
+
+  // o simulador de safra nova e o caso oposto: nenhum mes fechado
+  const L0 = backtest(-1, 12);
+  const t0 = [];
+  for (const [, cel] of L0)
+    for (const mm of MESES)
+      if (cel[mm] && cel[mm].erro !== null) t0.push({ ...cel[mm], m: mm });
+  if (t0.length) {
+    const cd2 = cartao(c, "E o simulador de safra nova?", "");
+    cd2.style.marginTop = "16px";
+    const p2 = document.createElement("p");
+    p2.className = "prosa";
+    p2.innerHTML = `<p>A matriz acima é previsão de um mês por vez, com
+      histórico. O simulador da outra aba é o caso oposto: uma safra que ainda
+      não existe, sem nenhum mês fechado, projetada até M12 de uma vez só.
+      Rodando o mesmo backtest nesse regime o erro é de
+      <strong>${med(t0.map(o => Math.abs(o.erro))).toFixed(1)}%</strong> em média
+      e <strong>${med(t0.filter(o => o.m === 12).map(o => Math.abs(o.erro))).toFixed(1)}%</strong>
+      em M12 — bem maior, e é o que se espera de uma projeção que não tem em que
+      se apoiar. O número fica aqui para o simulador ser usado sabendo disso.</p>`;
+    cd2.appendChild(p2);
+  }
+}
+
+function abaSimulador(c, dados) {
+  sincronizarSimulador();
+  const M = DADOS.modelo[IDX.corte[estado.corte]];
+  const cd = cartao(c, "Uma safra que ainda não aconteceu",
+    "Cliente novo não tem histórico, então a previsão usa a forma incondicional do BG/NBD. O único parâmetro de negócio é o ticket da 1ª compra.");
+  const duo = document.createElement("div");
+  duo.className = "duo";
+  cd.appendChild(duo);
+
+  const esq = document.createElement("div");
+  esq.className = "mini";
+  esq.innerHTML = `
+    <div class="campo">
+      <label class="rot" for="tm0">Ticket médio da 1ª compra —
+        <span class="num" id="vtm0">R$ ${fmtBR(estado.tm0)}</span></label>
+      <input type="range" id="tm0" min="${Math.round(M.ticket_m0 * .4)}"
+             max="${Math.round(M.ticket_m0 * 2.2)}" step="10" value="${estado.tm0}">
+      <p class="ajuda">Média histórica: R$ ${fmtBR(M.ticket_m0)}.</p>
+    </div>
+    <div class="campo">
+      <label class="rot" for="ncli">Clientes na safra</label>
+      <input type="number" id="ncli" min="50" max="20000" step="50"
+             value="${estado.nCli}">
+    </div>
+    <div class="campo">
+      <label class="rot" for="el">Elasticidade do ticket de recompra —
+        <span class="num" id="vel">${estado.elast.toFixed(2)}</span></label>
+      <input type="range" id="el" min="0" max="1" step="0.01" value="${estado.elast}">
+      <p class="ajuda">0 = o ticket de entrada não diz nada sobre a recompra.
+         1 = repasse proporcional. O padrão é o estimado nos dados.</p>
+    </div>
+    <div class="nota" id="notaM0"></div>
+    <div id="resumo" class="mini"></div>`;
+  duo.appendChild(esq);
+
+  const dir = document.createElement("div");
+  dir.innerHTML = `<h3 style="font-size:15px;margin-bottom:10px">
+                     Safra simulada contra o histórico</h3>`;
+  duo.appendChild(dir);
+  const gs = caixaGraf(dir);
+
+  function atualizar() {
+    const sim = simular();
+    $("#vtm0").textContent = "R$ " + fmtBR(estado.tm0);
+    $("#vel").textContent = estado.elast.toFixed(2);
+    const l0 = sim[0], rep0 = l0.freq - 1;
+    $("#notaM0").innerHTML = `<b>O M0 não é o ticket da 1ª compra.</b> M0 é o
+      primeiro <i>mês</i> de vida, e o modelo espera ${rep0.toFixed(2)} recompra
+      dentro dele: R$ ${fmtBR(estado.tm0)} (1ª compra) + ${rep0.toFixed(2)} ×
+      R$ ${fmtBR(l0.ticketRep)} (recompra) =
+      <b>R$ ${fmtBR(l0.rec_cliente)} por cliente em M0</b>.`;
+    $("#resumo").innerHTML = [3, 6, 12].map(k => {
+      const o = sim[k];
+      return `<div class="linhaval"><div><div class="m">M${k}</div>
+        <div class="g">R$ ${fmtBR(o.rec_cliente)}</div></div>
+        <div class="d">${fmtBR(o.freq, 2)} compras<br>ticket R$ ${fmtBR(o.ticket)}
+        <br>total R$ ${fmtBR(o.rec_total)}</div></div>`;
+    }).join("");
+    const n = grafSimulado(gs, sim, dados);
+    let leg = $("#legsim");
+    if (!leg) { leg = document.createElement("p"); leg.id = "legsim";
+                leg.className = "ajuda"; dir.appendChild(leg); }
+    leg.innerHTML = n
+      ? `A faixa azul é o intervalo das ${n} safras que já fecharam os 13 meses,
+         e a linha tracejada é a mediana delas. Se a curva simulada sai da faixa,
+         o cenário está pedindo algo que a base nunca entregou.`
+      : "Nenhuma safra fechou 13 meses neste recorte, então não há faixa de comparação.";
+  }
+  atualizar();
+  $("#tm0").oninput = e => { estado.tm0 = +e.target.value; atualizar(); };
+  $("#el").oninput = e => { estado.elast = +e.target.value; atualizar(); };
+  $("#ncli").oninput = e => { estado.nCli = Math.max(+e.target.value || 50, 1);
+                              atualizar(); };
+
+  const p = document.createElement("p");
+  p.className = "ajuda";
+  p.style.marginTop = "14px";
+  p.innerHTML = `A elasticidade que liga o slider de ticket à previsão de
+    recompra vale <b class="num">${M.elasticidade.toFixed(2)}</b> e foi estimada
+    nos dados — de onde ela sai está na aba
+    <b>Como o modelo foi feito</b>.`;
+  cd.appendChild(p);
+}
+
+/* --------------------------------------------- 6. como o modelo foi feito */
+function abaModelo(c) {
+  const M = DADOS.modelo[IDX.corte[estado.corte]];
+
+  // --- a resposta curta, que é o que se responde numa entrevista ---
+  const topo = cartao(c, "A resposta curta",
+    "O que se responde quando perguntam como os parâmetros foram escolhidos.");
+  const pr = document.createElement("div");
+  pr.className = "prosa";
+  pr.innerHTML = `<p>Os quatro parâmetros do BG/NBD (r, α, a, b) e os três do
+    Gamma-Gamma (p, q, v) <strong>não são escolhidos</strong> — são
+    <strong>estimados por máxima verossimilhança</strong> em cima da janela de
+    calibração. Não existe grid de valores para testar: dada a base e a janela,
+    a otimização devolve um conjunto só, e ele é o que maximiza a probabilidade
+    de ter observado exatamente aquele histórico de compras.</p>
+    <p>O que <em>é</em> escolha do analista está na tabela abaixo — janela de
+    calibração, unidade de tempo, quem entra na base — e essas escolhas sim
+    foram decididas por erro fora da amostra, com uma ressalva que vale dizer
+    em voz alta: escolher a especificação olhando o mesmo holdout que você
+    reporta é vazamento. Aqui cada decisão só ficou de pé quando valia nos três
+    cortes de backtest, não no melhor deles.</p>`;
+  topo.appendChild(pr);
+
+  // --- estimado x escolhido ---
+  const cd1 = cartao(c, "O que é estimado e o que é escolhido", "");
+  cd1.style.marginTop = "16px";
+  const t1 = document.createElement("div");
+  t1.className = "prosa";
+  t1.innerHTML = `<table class="tabela">
+    <tr><td>r, α &nbsp;<span style="color:var(--ink-3);font-weight:400">
+        (BG/NBD — taxa de compra)</span></td>
+      <td><strong>Estimado.</strong> Máxima verossimilhança. Descrevem a
+      Gamma de onde sai o λ de cada cliente: r/α é a taxa média de compra da
+      base, r sozinho diz o quanto os clientes diferem entre si.</td></tr>
+    <tr><td>a, b &nbsp;<span style="color:var(--ink-3);font-weight:400">
+        (BG/NBD — abandono)</span></td>
+      <td><strong>Estimado.</strong> Descrevem a Beta da probabilidade de o
+      cliente abandonar depois de cada compra. a/(a+b) é a chance média de
+      abandono por compra.</td></tr>
+    <tr><td>p, q, v &nbsp;<span style="color:var(--ink-3);font-weight:400">
+        (Gamma-Gamma)</span></td>
+      <td><strong>Estimado.</strong> Verossimilhança própria, ajustada só nos
+      clientes com recompra — quem comprou uma vez só não tem ticket de
+      recompra para informar nada.</td></tr>
+    <tr><td>Janela de calibração</td>
+      <td><strong>Escolha.</strong> Mínimo de 15 meses. Com 12, b estourava
+      para ~97 (equivale a dizer que ninguém nunca abandona) e M12 vinha
+      inflado. Decidido por estabilidade dos parâmetros, não por MAPE.</td></tr>
+    <tr><td>Unidade de tempo</td>
+      <td><strong>Escolha.</strong> Mês de 30,4375 dias. Não muda o ajuste —
+      só deixa r/α e as previsões legíveis em meses em vez de dias.</td></tr>
+    <tr><td>Quem entra na base</td>
+      <td><strong>Escolha.</strong> Safra 2009-12 fora, por censura à esquerda.
+      Decidido por diagnóstico da própria safra (frequência 9,4 contra 3,9 das
+      outras), não por tentativa e erro.</td></tr>
+    <tr><td>Elasticidade do ticket</td>
+      <td><strong>Estimado</strong> por regressão log-log no nível do cliente,
+      mas <strong>exposto como controle</strong> no simulador — é a premissa
+      mais fraca do conjunto (R² ${M.elasticidade_r2.toFixed(2)}) e quem usa
+      merece poder mexer nela.</td></tr>
+  </table>`;
+  cd1.appendChild(t1);
+
+  // --- como a estimacao roda ---
+  const cd2 = cartao(c, "Como a estimação roda",
+    "Sem lifetimes: a verossimilhança está escrita à mão em numpy + scipy.");
+  cd2.style.marginTop = "16px";
+  const t2 = document.createElement("div");
+  t2.className = "prosa";
+  t2.innerHTML = `<p>Para cada cliente entram três números: <b class="num">x</b>
+    (compras repetidas), <b class="num">t_x</b> (tempo entre a 1ª e a última
+    compra) e <b class="num">T</b> (idade do cliente no corte). A
+    log-verossimilhança do BG/NBD soma esses três num termo fechado por cliente;
+    o otimizador procura os quatro parâmetros que maximizam a soma.</p>
+    <ul>
+      <li><strong>Parâmetros otimizados em log.</strong> Todos os quatro têm que
+      ser positivos. Otimizar log(r), log(α), log(a), log(b) garante isso sem
+      precisar de restrição na fronteira, onde o otimizador costuma travar.</li>
+      <li><strong>Três chutes iniciais, dois otimizadores.</strong>
+      Nelder-Mead primeiro, porque não precisa de derivada e atravessa região
+      plana; L-BFGS-B depois, para refinar. Os três chutes existem para detectar
+      ótimo local: se convergissem para pontos diferentes, o resultado não seria
+      confiável. Convergem para o mesmo.</li>
+      <li><strong>Somas em log-espaço.</strong> O termo que separa "cliente
+      vivo" de "cliente que abandonou" soma duas exponenciais que estouram em
+      float. Somar via log-sum-exp evita o overflow — é o tipo de detalhe que
+      não muda a matemática e quebra a implementação.</li>
+    </ul>`;
+  cd2.appendChild(t2);
+
+  // --- estabilidade dos parametros entre cortes (dado vivo) ---
+  const cd3 = cartao(c, "Os parâmetros são estáveis?",
+    "O mesmo modelo, reajustado em quatro janelas de calibração diferentes. Se os números pulassem entre cortes, a estimação não estaria dizendo nada sobre o negócio.");
+  cd3.style.marginTop = "16px";
+  const g3 = caixaGraf(cd3);
+  const tb = document.createElement("table");
+  tb.className = "tabela simbolos";
+  const linhas = IDX.corte.map(k => [k, DADOS.modelo[k]]);
+  tb.innerHTML = "<thead><tr><th>Corte</th><th>Clientes</th><th>r</th><th>α</th>"
+    + "<th>a</th><th>b</th><th>r/α</th><th>a/(a+b)</th>"
+    + "<th>corr(freq,ticket)</th></tr></thead><tbody>"
+    + linhas.map(([k, m]) => {
+        const B = m.bgnbd;
+        return `<tr><td>${mesRot(k.slice(0, 7))}</td>
+          <td class="num">${fmtBR(m.n_clientes)}</td>
+          <td class="num">${B.r.toFixed(3)}</td>
+          <td class="num">${B.alpha.toFixed(3)}</td>
+          <td class="num">${B.a.toFixed(3)}</td>
+          <td class="num">${B.b.toFixed(3)}</td>
+          <td class="num">${(B.r / B.alpha).toFixed(3)}</td>
+          <td class="num">${(B.a / (B.a + B.b)).toFixed(3)}</td>
+          <td class="num">${m.corr >= 0 ? "+" : ""}${m.corr.toFixed(3)}</td></tr>`;
+      }).join("") + "</tbody>";
+  g3.appendChild(tb);
+  const n3 = document.createElement("div");
+  n3.className = "prosa";
+  n3.innerHTML = `<p style="margin-top:12px">As colunas que importam são as duas
+    últimas razões, não os parâmetros crus. <b class="num">r/α</b> é a taxa média
+    de compra por mês e <b class="num">a/(a+b)</b> é a chance média de abandono a
+    cada compra — são elas que têm leitura de negócio, e são bem mais estáveis
+    entre cortes do que r, α, a e b separados. Isso é esperado: a
+    verossimilhança identifica bem as razões e deixa alguma folga nos
+    parâmetros individuais.</p>
+    <p>A última coluna é o diagnóstico do Gamma-Gamma: ele assume independência
+    entre frequência e ticket, e o critério usual é |corr| &lt; 0,1. Fica em
+    torno de 0,03 a 0,05 em todos os cortes — a hipótese passa. Com a safra
+    2009-12 dentro da base, essa mesma correlação ia para 0,10, no limite: foi
+    um dos sinais de que aquela safra estava contaminada.</p>`;
+  cd3.appendChild(n3);
+
+  // --- validacao ---
+  const cd4 = cartao(c, "Como isso foi validado",
+    "Duas checagens que respondem a perguntas diferentes.");
+  cd4.style.marginTop = "16px";
+  const t4 = document.createElement("div");
+  t4.className = "prosa";
+  t4.innerHTML = `<p><strong>1. Recuperação de parâmetros.</strong> Simula 4 mil
+    clientes a partir do processo gerador do BG/NBD com r, α, a, b conhecidos,
+    ajusta o modelo em cima da simulação e confere se os números voltam. E
+    confere se a fórmula fechada de E[X(t)], que usa a hipergeométrica
+    gaussiana, bate com a média de 20 mil clientes simulados — erro menor que
+    1,5% em t = 3, 6 e 12 meses. <em>Isso responde: a implementação está
+    certa?</em> É o teste que pega erro de sinal e de constante, que um MAPE
+    bonito esconde.</p>
+    <p><strong>2. Backtest fora da amostra.</strong> Ajusta só até uma data de
+    corte, projeta M0..M12 e compara com o que realmente aconteceu depois. Só
+    entram células que <em>eram previsão</em> naquele corte e que <em>já
+    fecharam</em> na base cheia. <em>Isso responde: o modelo acerta neste
+    negócio?</em> Está na aba Qualidade da previsão, e o MAPE cai de ~9% (corte
+    em fev/2011) para ~4% (ago/2011) conforme a janela de calibração cresce.</p>
+    <p><strong>3. Sanidade da safra nova.</strong> A previsão incondicional para
+    um cliente sem histórico dá 3,95 compras em M12, contra 4,27 observadas nas
+    safras que já fecharam — 7% conservador. Vale conferir porque a safra nova é
+    o único uso em que o modelo não tem nenhum histórico individual para se
+    apoiar.</p>`;
+  cd4.appendChild(t4);
+
+}
+
+function abaGlossario(c) {
+  const cd = cartao(c, "O que cada termo quer dizer aqui", "");
+  const d = document.createElement("div");
+  d.className = "prosa";
+  d.innerHTML = GLOSSARIO_HTML;
+  cd.appendChild(d);
+}
+
+function abaCase(c) {
+  const M = DADOS.modelo[IDX.corte[estado.corte]];
+  const cd = cartao(c, "O case", "");
+  const [antes, depois] = CASE_HTML.split("<!--GRAFICO_ELASTICIDADE-->");
+
+  const d = document.createElement("div");
+  d.className = "prosa";
+  d.innerHTML = antes;
+  cd.appendChild(d);
+
+  const duo = document.createElement("div");
+  duo.className = "duo"; duo.style.margin = "8px 0 18px";
+  cd.appendChild(duo);
+  const ge = document.createElement("div"); ge.className = "graf";
+  duo.appendChild(ge);
+  const tx = document.createElement("div");
+  tx.className = "prosa";
+  tx.innerHTML = `<p>Cada ponto é um cliente: ticket da 1ª compra no eixo x,
+    ticket médio das recompras no eixo y, ambos em log. A reta é o ajuste, com
+    elasticidade <strong>${M.elasticidade.toFixed(2)}</strong>
+    (R² ${M.elasticidade_r2.toFixed(2)}).</p>
+    <p>No nível da safra esse mesmo coeficiente oscilava entre −0,03 e 0,69
+    conforme o corte: são só 23 médias, e média de safra é um número ruidoso.
+    No nível do cliente são milhares de pontos e ele fica em
+    ${M.elasticidade.toFixed(2)} em todos os cortes. Por isso a estimativa é
+    feita no cliente, mesmo o uso sendo em safra.</p>`;
+  duo.appendChild(tx);
+  grafElasticidade(ge);
+
+  const d2 = document.createElement("div");
+  d2.className = "prosa";
+  d2.innerHTML = depois || "";
+  cd.appendChild(d2);
+}
+
+const GLOSSARIO_HTML = `
+<p>Cada termo abaixo aparece em algum lugar do app. A ideia é que dê para ler o projeto inteiro sem precisar conhecer a literatura de CLV antes.</p>
+<h3>A leitura de safra</h3>
+<p><strong>Safra (ou cohort).</strong> O grupo de clientes que fez a primeira compra no mesmo mês. A safra 2010-03 são todas as pessoas cuja compra inicial caiu em março de 2010. Uma vez na safra, sempre na safra — o cliente não muda de grupo depois.</p>
+<p><strong>M0, M1, … M12.</strong> Meses de vida do cliente, contados a partir da <strong>primeira compra dele</strong>, não do calendário. M0 é o primeiro mês de vida, M3 são os primeiros 4 meses, M12 são 13 meses. Quem entrou dia 30 tem o M0 dele indo até o dia 29 do mês seguinte — se fosse mês de calendário, esse cliente teria um M0 de um dia só e a comparação entre safras ficaria torta.</p>
+<p><strong>Acumulado.</strong> Todo número de M_k é acumulado desde a primeira compra, não o que aconteceu só naquele mês. A receita em M6 inclui a de M0 a M5. É por isso que a curva de receita nunca desce.</p>
+<p><strong>Realizado × previsto.</strong> Realizado é contagem direta na base: aconteceu, está registrado. Previsto é o que o modelo espera para o pedaço que ainda não aconteceu. No app, <strong>cor cheia = realizado, hachura = previsto</strong> — e uma mesma barra pode ter os dois, quando a data de corte cai no meio daquele pedaço.</p>
+<p><strong>Data de corte.</strong> O &quot;hoje&quot; da simulação. Tudo até ela é realizado; dali para frente é o modelo. Arrastar o corte para trás faz safras inteiras saírem do realizado e entrarem na previsão.</p>
+<h3>As três métricas</h3>
+<p><strong>Frequência de compra.</strong> Quantas compras o cliente fez, em média, acumulado até aquele mês. <span class="num">frequência = total de compras da safra ÷ nº de clientes</span>. Uma safra com frequência 3,9 em M12 comprou, em média, 3,9 vezes nos 13 primeiros meses.</p>
+<p><strong>Ticket médio.</strong> Quanto vale uma compra, em média. <span class="num">ticket = receita total ÷ nº de compras</span>. É a única das três métricas que <strong>não é acumulável</strong>: o ticket de M12 não é o de M0 mais um pedaço, é uma média que se move conforme entram compras novas — e pode cair.</p>
+<p><strong>Receita por cliente.</strong> O produto das duas: <span class="num">frequência × ticket</span>, ou <span class="num">receita total ÷ nº de clientes</span>. É a métrica que responde &quot;quanto vale um cliente desta safra&quot;, e é a que o time financeiro usa para decidir quanto pagar para adquirir um cliente novo.</p>
+<p><strong>LTV / CLV (Customer Lifetime Value).</strong> Valor do cliente ao longo da vida — aqui truncado em 13 meses, porque é o horizonte que a base permite validar. LTV &quot;infinito&quot; existe na teoria, mas é um número que ninguém consegue conferir.</p>
+<h3>O modelo</h3>
+<p><strong>Negócio não-contratual.</strong> O cliente não cancela nada: ele simplesmente para de comprar, e você nunca fica sabendo. Não existe evento de churn com data. Isso elimina a possibilidade de treinar um classificador de churn — não há rótulo para aprender. A família BTYD (<em>Buy Till You Die</em>) existe justamente para esse caso: em vez de prever o rótulo que não existe, ela modela o processo que gera as compras.</p>
+<p><strong>BG/NBD (Beta-Geometric / Negative Binomial Distribution).</strong> Modela <strong>quantas compras</strong> esperar. Cada cliente tem duas características que nunca observamos: uma taxa própria de compra (λ) e uma probabilidade própria de abandonar (p). O modelo supõe que λ vem de uma distribuição Gamma(r, α) e p de uma Beta(a, b), estima esses quatro números a partir do histórico de todo mundo, e daí devolve quantas compras esperar de cada cliente.</p>
+<ul>
+<li><strong>r e α</strong> descrevem a taxa de compra. <strong>r/α</strong> é a taxa média de compra por</li>
+<p>mês da base (aqui ≈ 0,25, ou uma compra a cada 4 meses). O <strong>r</strong> sozinho diz o quanto os clientes diferem entre si: r baixo = base muito heterogênea.</p>
+<li><strong>a e b</strong> descrevem o abandono. <strong>a/(a+b)</strong> é a chance média de o cliente</li>
+<p>abandonar depois de cada compra (aqui ≈ 5%).</p>
+</ul>
+<p><strong>Gamma-Gamma.</strong> Modela <strong>a que valor</strong> essas compras acontecem. Supõe que o ticket de cada cliente varia em torno de uma média própria dele, e que essa média varia entre clientes. O resultado prático é uma média ponderada: quem tem muito histórico é previsto pelo próprio ticket, quem tem pouco é puxado para a média da base. Os parâmetros são <strong>p, q, v</strong>.</p>
+<p><strong>x, t_x e T.</strong> Os três números que resumem cada cliente para o BG/NBD. <strong>x</strong> = quantas compras repetidas ele fez (a primeira não conta, ela é a aquisição). <strong>t_x</strong> = tempo entre a primeira e a última compra. <strong>T</strong> = idade do cliente na data de corte. Cliente com x alto e t_x perto de T está comprando até agora; cliente com x alto e t_x baixo comprou muito e sumiu.</p>
+<p><strong>P(vivo).</strong> A probabilidade de o cliente ainda estar ativo, dado o que ele fez. Não é observável — é o que o BG/NBD deduz. Quem tinha ritmo e parou há muito tempo tem P(vivo) baixo.</p>
+<p><strong>Previsão condicional × incondicional.</strong> <em>Condicional</em> é a previsão de um cliente <strong>com</strong> histórico: usa o x, t_x e T dele. <em>Incondicional</em> é a de um cliente que ainda não existe — não há em que condicionar, então a previsão usa só os parâmetros do modelo e o tempo. O simulador de safra nova é o caso incondicional.</p>
+<p><strong>Verossimilhança e máxima verossimilhança (MLE).</strong> A verossimilhança é a probabilidade de o modelo, com um dado conjunto de parâmetros, ter gerado exatamente o histórico observado. Maximizar a verossimilhança é procurar os parâmetros que tornam o que aconteceu o mais provável possível. <strong>Não é um grid de valores para testar</strong> — é uma otimização com uma resposta só, dada a base e a janela.</p>
+<h3>As premissas e os diagnósticos</h3>
+<p><strong>Elasticidade do ticket.</strong> Responde: <em>se a safra entra com um ticket de primeira compra mais alto, quanto disso se mantém nas recompras?</em> É um expoente, não um multiplicador:</p>
+<p><span class="num">ticket_recompra = ticket_recompra_médio × (ticket_M0 ÷ ticket_M0_médio) ^ elasticidade</span></p>
+<ul>
+<li>elasticidade <strong>1</strong> = repasse proporcional. Dobrou a entrada, dobra a recompra.</li>
+<li>elasticidade <strong>0</strong> = o ticket de entrada não diz nada sobre a recompra.</li>
+<li>elasticidade <strong>0,44</strong> (o valor estimado aqui) = dobrou a entrada, a recompra</li>
+<p>sobe 2^0,44 = <strong>1,36×</strong>, não 2×.</p>
+</ul>
+<p>Ela é estimada por uma regressão log-log no nível do cliente: põe o ticket da 1ª compra no eixo x, o ticket médio das recompras no eixo y, ambos em logaritmo, e o coeficiente da reta é a elasticidade. Em log-log o coeficiente já <em>é</em> a elasticidade — é a razão de usar log, e não uma decisão estética.</p>
+<p><strong>Regressão à média.</strong> O fenômeno por trás dessa elasticidade menor que 1. Quem teve uma primeira compra excepcionalmente alta teve, em parte, sorte — e a sorte não se repete. Na compra seguinte a pessoa tende a voltar para perto da média. É o mesmo mecanismo que o Gamma-Gamma aplica no nível individual quando puxa o cliente de pouco histórico na direção da média da base.</p>
+<p><strong>Correlação frequência × ticket.</strong> O Gamma-Gamma exige que quem compra mais não tenha, sistematicamente, um ticket diferente de quem compra menos. O critério usual é |correlação| &lt; 0,1. Aqui fica em torno de 0,05 — a hipótese passa, e o número está na barra lateral para poder ser conferido em vez de presumido.</p>
+<p><strong>Censura à esquerda.</strong> Quando a base começa depois de o negócio começar, quem já era cliente aparece como se tivesse sido adquirido no primeiro mês da base. Não é cliente novo — é cliente antigo com histórico cortado. Aqui isso atingiu a safra 2009-12, que tinha frequência 9,4 em M12 contra 3,9 das outras, e por isso ela foi removida.</p>
+<h3>Como o erro é medido</h3>
+<p><strong>MAPE (Mean Absolute Percentage Error).</strong> Erro percentual médio, sem sinal: <span class="num">|previsto − realizado| ÷ realizado</span>, tirada a média. MAPE de 4% quer dizer que a previsão erra 4% para cima ou para baixo, em média. Não diz a direção.</p>
+<p><strong>Viés.</strong> O mesmo erro, <strong>com</strong> sinal: <span class="num">(previsto − realizado) ÷ realizado</span>. Viés positivo = o modelo prevê a mais de forma sistemática. Um MAPE de 5% com viés de +5% é bem pior que um MAPE de 5% com viés de 0% — o primeiro erra sempre para o mesmo lado, e erro sistemático se acumula no orçamento. Por isso os dois aparecem juntos no app.</p>
+<p><strong>Fora da amostra (out-of-sample).</strong> Medir erro nos mesmos dados usados para ajustar o modelo não mede nada: o modelo já viu a resposta. Erro fora da amostra é medido em dados que o ajuste nunca viu.</p>
+<p><strong>Vazamento (leakage).</strong> Quando informação do teste escapa para o treino sem querer. A forma mais comum e mais discreta: escolher a especificação do modelo olhando o resultado do mesmo holdout que depois se reporta. O número sai bonito e não vale nada.</p>
+<p><strong>Validação cruzada por safra (<em>leave-one-cohort-out</em>).</strong> Como o erro é medido aqui. Para avaliar a safra 2010-03, o modelo é reajustado <strong>sem nenhum cliente dela</strong> — o ajuste nunca vê a safra que vai prever. Depois ele projeta a vida dela e compara com o que de fato aconteceu. Repete-se isso safra por safra.</p>
+<p><strong>Previsão um passo à frente.</strong> O regime usado na aba de qualidade: cada mês é previsto com o mês anterior já fechado. Com M0, M1 e M2 na mão prevê-se o M3; quando o M3 fecha, prevê-se o M4. É como uma curva de cohort é acompanhada na prática, e é a razão de o erro ficar em 3,7% — bem abaixo dos 18% de projetar 13 meses de uma vez, sem nenhum histórico.</p>
+`;
+
+const CASE_HTML = `
+<h3>O problema</h3>
+<p>Quando aquisição pede orçamento para trazer 500 clientes novos, a pergunta que
+decide o investimento não é quanto eles gastaram na primeira compra — é
+<strong>quanto eles vão ter gastado em 12 meses</strong>. Um dashboard de
+realizado responde isso com um ano de atraso.</p>
+<p>Aqui a data de corte é um controle: arrastá-la para trás faz safras inteiras
+saírem do realizado e entrarem na previsão. As safras antigas mostram o que
+aconteceu, as recentes o que o modelo espera, e a safra que ainda nem existe
+pode ser simulada.</p>
+
+<h3>Por que BG/NBD + Gamma-Gamma</h3>
+<p>O negócio é <strong>não-contratual</strong>: o cliente não cancela assinatura,
+ele só some. Não existe evento de churn para rotular, então não há alvo para
+treinar um classificador. A família BTYD modela o processo que gera as compras
+em vez do rótulo que não existe.</p>
+<p><strong>BG/NBD:</strong> enquanto ativo, o cliente compra a uma taxa
+λ ~ Gamma(r, α); depois de cada compra abandona com probabilidade p ~ Beta(a, b).
+Nunca observamos λ nem p — só frequência, recência e idade. O modelo inverte
+isso e devolve compras esperadas em t meses e a probabilidade de ainda estar vivo.</p>
+<p><strong>Gamma-Gamma:</strong> o ticket individual varia em torno de uma média
+própria do cliente, e essa média varia entre clientes. Na prática vira uma média
+ponderada: quem tem muito histórico é previsto pelo próprio ticket, quem tem
+pouco é puxado para a média da base. A hipótese exigida é independência entre
+frequência e ticket — checada, não presumida: a correlação está na lateral.</p>
+
+<h3>Como cada eixo do LTV vira uma curva</h3>
+<p>O modelo não cospe um número por safra. Ele produz uma <strong>curva por mês
+de vida</strong> para cada um dos três eixos, e M3, M6 e M12 são apenas três
+leituras dessa curva.</p>
+<p>Para cada cliente e cada mês k o modelo responde duas perguntas separadas.
+<strong>Quantas compras?</strong> O BG/NBD devolve E[Y(t) | x, t_x, T] — as
+compras esperadas nos próximos t meses, dado o que aquele cliente já fez.
+Somando sobre a safra e dividindo pelo número de clientes sai a curva de
+frequência acumulada.</p>
+<p><strong>A que ticket?</strong> O Gamma-Gamma devolve E[M | x, m̄], uma média
+ponderada entre o ticket que o cliente já praticou e o ticket da base. Ou seja:
+<strong>o ticket médio é previsto a partir do próprio ticket médio
+observado</strong>, com o peso do histórico individual crescendo conforme o
+cliente compra mais. Quem tem uma compra só é previsto quase inteiramente pela
+base; quem tem quinze é previsto quase inteiramente por si.</p>
+<p><strong>Receita</strong> é o produto: compras esperadas × ticket esperado,
+acumulado mês a mês. Como é acumulada, ela nunca desce.</p>
+<p>A curva do ticket pode descer, e desce mesmo — é a única das três que não é
+acumulável. O ticket em M12 não é o de M0 mais um pedaço: é uma média que se
+move conforme entram compras novas com valores diferentes. Por isso ele aparece
+em camadas de nível no gráfico, e não em barras empilhadas de incremento.</p>
+<p>O corte parte a curva em dois trechos. Até ele, cada ponto é contagem direta
+na base. Depois dele, cada ponto é o realizado até ali <strong>mais</strong> o
+que o modelo projeta para o pedaço que falta — nunca a previsão inteira jogada
+por cima do observado. É por isso que uma safra pode ter o M3 cheio e o M12
+hachurado na mesma barra.</p>
+
+<h3>Como a simulação de safra nova funciona</h3>
+<p>Uma safra que ainda não aconteceu não tem histórico: x = 0, t_x = 0, T = 0.
+Não há em que condicionar. Então a previsão troca a forma condicional pela
+<strong>incondicional</strong> do BG/NBD:</p>
+<ul>
+  <li>compras acumuladas em M_k = 1 (a própria aquisição) + E[X(k+1)], que
+      depende só do tempo e dos parâmetros r, α, a, b;</li>
+  <li>o ticket da 1ª compra é o que você escolhe no slider — é a única alavanca
+      de negócio;</li>
+  <li>o ticket das recompras sai do histórico, corrigido pela elasticidade:
+      <span class="num">ticket_recompra = base × (ticket_M0 / média) ^ 0,44</span>.</li>
+</ul>
+<p>Esse expoente 0,44 é o ponto que merece atenção, e não foi chutado: é uma
+regressão log-log no nível do cliente entre o ticket da 1ª compra e o ticket
+médio das recompras. Subir o ticket de entrada <strong>não</strong> sobe a
+recompra na mesma proporção — quem entra pagando o dobro recompra num patamar
+1,36× maior, não 2×. É regressão à média, o mesmo fenômeno que o Gamma-Gamma
+implementa na previsão individual.</p>
+<p>Como o R² dessa regressão é 0,25, a elasticidade fica exposta como controle
+no app em vez de escondida numa constante. É a premissa mais frágil do
+conjunto, e quem usa o simulador merece poder testá-la.</p>
+<!--GRAFICO_ELASTICIDADE-->
+<p>A curva simulada aparece contra a faixa das safras que já fecharam os 13
+meses. Se o cenário sai da faixa, ele está pedindo algo que a base nunca
+entregou — o que não o torna impossível, mas obriga a explicar de onde viria a
+diferença.</p>
+<p>A safra simulada também pode entrar nos gráficos da primeira aba, ao lado das
+reais — é a marcação <strong>Incluir a safra simulada nos gráficos</strong> na
+barra lateral. Ela aparece como mais uma barra, inteiramente hachurada, porque é
+100% previsão. Ver o cenário desenhado ao lado das safras que de fato
+aconteceram é o teste de sanidade mais rápido que existe.</p>
+
+<h3>Os modelos foram escritos do zero</h3>
+<p>Em numpy + scipy. A lib <span class="num">lifetimes</span>, que é o caminho
+usual, está sem manutenção desde 2020 e quebra com versões recentes de pandas e
+scipy — dependência frágil num app que precisa ficar de pé. Aqui a
+verossimilhança, as fórmulas fechadas com a hipergeométrica gaussiana e o ajuste
+por máxima verossimilhança estão explícitos e testados.</p>
+<p>A validação é por <strong>recuperação de parâmetros</strong>: simula clientes
+a partir do processo gerador com parâmetros conhecidos, ajusta o modelo e confere
+se os números voltam; e confere se a fórmula fechada de E[X(t)] bate com a média
+de 20 mil clientes simulados (erro &lt; 1,5%). É o teste que pega erro de sinal e
+de constante — coisas que um MAPE bonito esconde.</p>
+
+<h3>As três decisões que mudaram o resultado</h3>
+<table class="tabela">
+  <tr><td>Safra 2009-12 descartada</td>
+      <td>Censura à esquerda: a base começa em 01/12/2009, então quem já era
+      cliente antes aparece como novo. São 951 clientes (3× a média das outras)
+      com frequência em M12 de 9,4 contra 3,9 das demais. Deixá-los dentro
+      inflava a previsão de safra nova em 12% e levava a correlação
+      frequência × ticket de 0,05 para 0,10, no limite do que o Gamma-Gamma
+      tolera.</td></tr>
+  <tr><td>Calibração mínima de 15 meses</td>
+      <td>Com 12 meses o BG/NBD não identifica o processo de abandono: o
+      parâmetro b estourava para ~97, o que equivale a dizer que ninguém nunca
+      churna, e M12 vinha inflado. Por isso o trilho começa em fev/2011.</td></tr>
+  <tr><td>Elasticidade estimada no cliente</td>
+      <td>No nível da safra sobram ~23 médias ruidosas e o coeficiente oscilava
+      entre −0,03 e 0,69 conforme o corte. No nível do cliente, com milhares de
+      pontos, fica estável em 0,44 em todos os cortes.</td></tr>
+</table>
+
+<h3>O que roda em tempo real, e o que não roda</h3>
+<p>Ajustar o BG/NBD é caro: são ~3 segundos de otimização por data de corte, e
+existem 10 cortes. Rodar isso a cada clique deixaria o app inutilizável. Mas
+ajustar também é <strong>determinístico</strong> — dada a base e a janela, o
+resultado é sempre o mesmo. Não há motivo para refazer.</p>
+<p>Então a arquitetura separa as duas coisas por custo, não por preguiça.</p>
+<p><strong>Offline, uma vez.</strong> Para cada corte, o modelo é ajustado por
+máxima verossimilhança e projetado cliente a cliente, mês a mês. O resultado é
+um painel de 540 mil linhas — cliente × mês × corte — com o realizado e o
+previsto em colunas próprias, 1,5 MB comprimidos, versionados junto com o
+código.</p>
+<p><strong>Ao vivo, a cada clique.</strong> Tudo que o app faz em cima desse
+painel é soma: filtrar por tipo de cliente e região, agregar por safra, virar em
+barra empilhada. Instantâneo para qualquer combinação de filtros, porque o
+trabalho pesado já aconteceu. Trocar a data de corte não reajusta nada — troca
+qual painel está sendo lido.</p>
+<p><strong>Ao vivo de verdade: a safra nova.</strong> Aqui o modelo roda mesmo,
+a cada movimento do slider. A previsão de um cliente sem histórico é
+<span class="num">E[X(t)] = (a+b−1)/(a−1) · [1 − (α/(α+t))^r ·
+₂F₁(r, b; a+b−1; t/(α+t))]</span>, uma forma fechada que depende só de t e dos
+quatro parâmetros salvos. Avaliar a hipergeométrica gaussiana em 13 pontos custa
+microssegundos — o caro era achar r, α, a, b, não usá-los.</p>
+<p>É a mesma separação que o Shiny fazia na versão original: o ajuste é batch, a
+simulação é interativa. A diferença é que aqui a fronteira entre as duas está
+escrita, em vez de escondida atrás de um botão de "recalcular".</p>
+<p>Nesta página estática a separação vai um passo além: o painel é exportado
+como um cubo agregado e a forma fechada é reimplementada em JavaScript, então o
+simulador funciona sem nenhum servidor Python atrás. O que não dá para fazer
+aqui é reajustar o modelo — e é exatamente por isso que os cortes são fixos.</p>
+
+<h3>Limites, ditos na cara</h3>
+<ul>
+  <li>O modelo não sabe de campanha, preço nem sazonalidade — ele extrapola o
+      padrão de compra observado. Uma safra que entrar numa promoção agressiva
+      vai furar a previsão, e isso é limitação do método, não bug.</li>
+  <li>O simulador de safra nova erra 18% em média e 23% em M12. É outro
+      problema, mais difícil que prever um mês por vez: não há nenhum histórico
+      em que se apoiar. O número está na aba de qualidade justamente para o
+      simulador ser usado sabendo disso.</li>
+  <li>A elasticidade tem R² de 0,25. O ticket de entrada explica só parte da
+      recompra.</li>
+  <li>A base é de varejo online do Reino Unido, 2009–2011, em libras exibidas
+      como R$. O que se transfere é o método, não os patamares.</li>
+</ul>
+
+<h3>Base e stack</h3>
+<p><strong>Online Retail II</strong> (UCI): 1,07 milhão de linhas, 01/12/2009 a
+09/12/2011. Depois da limpeza — sem cancelamento, sem valor negativo, sem código
+que não é produto, só cliente identificado — sobram 36 mil transações e 5,8 mil
+clientes, dos quais 4,9 mil entram no modelo. <strong>72% têm recompra</strong>,
+que é o que torna a base adequada ao BTYD. A Olist, mais óbvia por ser
+brasileira, tem ~3% de recompra e o modelo não teria o que estimar.</p>
+<p>Python · numpy · scipy · pandas · Streamlit no app completo. Esta página é uma
+prévia estática: os painéis vêm pré-calculados e a simulação de safra nova roda
+aqui mesmo, porque E[X(t)] de cliente novo só depende de t.</p>`;
+
+/* ------------------------------------------------------------------ boot */
+sincronizarSimulador();
+render();
+let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 180); });
+matchMedia("(prefers-color-scheme:dark)").addEventListener("change", () =>
+  setTimeout(render, 60));
+</script>

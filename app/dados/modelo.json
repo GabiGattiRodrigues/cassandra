@@ -1,0 +1,258 @@
+{
+  "cortes": [
+    "2011-02-28",
+    "2011-03-31",
+    "2011-04-30",
+    "2011-05-31",
+    "2011-06-30",
+    "2011-07-31",
+    "2011-08-31",
+    "2011-09-30",
+    "2011-10-31",
+    "2011-11-30"
+  ],
+  "fim_dados": "2011-11-30",
+  "unidade_dias": 30.4375,
+  "por_corte": {
+    "2011-02-28": {
+      "bgnbd": {
+        "r": 0.8671866115643,
+        "alpha": 3.523072975721998,
+        "a": 0.5742725676814671,
+        "b": 15.667319311315643
+      },
+      "gamma_gamma": {
+        "p": 2.40744606761956,
+        "q": 3.8511081927367496,
+        "v": 477.53612263272004
+      },
+      "log_verossimilhanca_bgnbd": -15380.855003320883,
+      "log_verossimilhanca_gg": -14367.099733560788,
+      "n_clientes": 3549,
+      "corr_freq_ticket": 0.022329296277666017,
+      "ticket_populacional_gg": 403.2265290763673,
+      "ticket_m0_medio": 410.2572560489232,
+      "ticket_recompra_medio": 402.6722448711205,
+      "elasticidade_ticket": 0.4444428704343182,
+      "elasticidade_r2": 0.2447159950828539,
+      "pct_repetidores": 0.5953789799943646,
+      "freq_media_repetida": 1.9630881938574247
+    },
+    "2011-03-31": {
+      "bgnbd": {
+        "r": 0.8211476551126231,
+        "alpha": 3.367799310286007,
+        "a": 0.4659273735619615,
+        "b": 8.795532189565607
+      },
+      "gamma_gamma": {
+        "p": 2.4347416113002627,
+        "q": 3.8576274728215663,
+        "v": 466.2241730719159
+      },
+      "log_verossimilhanca_bgnbd": -16865.32476363294,
+      "log_verossimilhanca_gg": -15037.562499347398,
+      "n_clientes": 3734,
+      "corr_freq_ticket": 0.031162795268152244,
+      "ticket_populacional_gg": 397.23001166818926,
+      "ticket_m0_medio": 408.39577400557386,
+      "ticket_recompra_medio": 403.18545024845474,
+      "elasticidade_ticket": 0.44841546621153605,
+      "elasticidade_r2": 0.2499186657673449,
+      "pct_repetidores": 0.5942688805570434,
+      "freq_media_repetida": 2.0291912158543117
+    },
+    "2011-04-30": {
+      "bgnbd": {
+        "r": 0.7972798155174153,
+        "alpha": 3.3136973798787306,
+        "a": 0.38762315102920075,
+        "b": 6.091858569156115
+      },
+      "gamma_gamma": {
+        "p": 2.562352945862767,
+        "q": 3.790659292785448,
+        "v": 429.5519661890544
+      },
+      "log_verossimilhanca_bgnbd": -18325.67222246671,
+      "log_verossimilhanca_gg": -15737.302653843399,
+      "n_clientes": 3846,
+      "corr_freq_ticket": 0.025668758097887195,
+      "ticket_populacional_gg": 394.40993345592494,
+      "ticket_m0_medio": 406.7734623921085,
+      "ticket_recompra_medio": 403.40416272788656,
+      "elasticidade_ticket": 0.4436047255057433,
+      "elasticidade_r2": 0.24900153256034352,
+      "pct_repetidores": 0.6050442017680707,
+      "freq_media_repetida": 2.12402496099844
+    },
+    "2011-05-31": {
+      "bgnbd": {
+        "r": 0.7688838757882098,
+        "alpha": 3.1759383324047503,
+        "a": 0.2843724870061643,
+        "b": 4.0931903287668865
+      },
+      "gamma_gamma": {
+        "p": 2.681139792225963,
+        "q": 3.7583498724291458,
+        "v": 402.0922980467861
+      },
+      "log_verossimilhanca_bgnbd": -20019.243476520485,
+      "log_verossimilhanca_gg": -16504.149321465742,
+      "n_clientes": 3954,
+      "corr_freq_ticket": 0.028630565957571356,
+      "ticket_populacional_gg": 390.837170881234,
+      "ticket_m0_medio": 406.5185590985375,
+      "ticket_recompra_medio": 401.4355735188785,
+      "elasticidade_ticket": 0.44132866711502156,
+      "elasticidade_r2": 0.25180981345966014,
+      "pct_repetidores": 0.6186140617096612,
+      "freq_media_repetida": 2.2678300455235205
+    },
+    "2011-06-30": {
+      "bgnbd": {
+        "r": 0.7381123066383497,
+        "alpha": 3.0435102707609243,
+        "a": 0.29900976960162257,
+        "b": 4.325205381495909
+      },
+      "gamma_gamma": {
+        "p": 2.6831764807509173,
+        "q": 3.779381576079913,
+        "v": 398.9250008060298
+      },
+      "log_verossimilhanca_bgnbd": -21633.692363851485,
+      "log_verossimilhanca_gg": -17109.873325955494,
+      "n_clientes": 4062,
+      "corr_freq_ticket": 0.031683197591290325,
+      "ticket_populacional_gg": 385.11667090201075,
+      "ticket_m0_medio": 414.80189586738265,
+      "ticket_recompra_medio": 399.2896686861038,
+      "elasticidade_ticket": 0.4360175140383455,
+      "elasticidade_r2": 0.24610290114031053,
+      "pct_repetidores": 0.6260462826193993,
+      "freq_media_repetida": 2.3882323978335793
+    },
+    "2011-07-31": {
+      "bgnbd": {
+        "r": 0.7184412450350706,
+        "alpha": 2.966475338606369,
+        "a": 0.3020139040489139,
+        "b": 4.14796813942469
+      },
+      "gamma_gamma": {
+        "p": 2.5335525459860855,
+        "q": 3.800637175103339,
+        "v": 421.8837656719966
+      },
+      "log_verossimilhanca_bgnbd": -23250.395602474047,
+      "log_verossimilhanca_gg": -17738.751469892144,
+      "n_clientes": 4164,
+      "corr_freq_ticket": 0.03655871473405322,
+      "ticket_populacional_gg": 381.65053943092244,
+      "ticket_m0_medio": 413.8396697038724,
+      "ticket_recompra_medio": 398.71667460737604,
+      "elasticidade_ticket": 0.44334026576675317,
+      "elasticidade_r2": 0.2529598272811969,
+      "pct_repetidores": 0.6340057636887608,
+      "freq_media_repetida": 2.5009606147934678
+    },
+    "2011-08-31": {
+      "bgnbd": {
+        "r": 0.6949892408073324,
+        "alpha": 2.878786735301309,
+        "a": 0.2717349420690401,
+        "b": 3.278069917298781
+      },
+      "gamma_gamma": {
+        "p": 2.4547951327186275,
+        "q": 3.7837986569769013,
+        "v": 431.5895614905105
+      },
+      "log_verossimilhanca_bgnbd": -24818.53778865845,
+      "log_verossimilhanca_gg": -18250.735938676175,
+      "n_clientes": 4269,
+      "corr_freq_ticket": 0.03888133330819832,
+      "ticket_populacional_gg": 380.5821057581834,
+      "ticket_m0_medio": 413.2743920871305,
+      "ticket_recompra_medio": 401.0910773434912,
+      "elasticidade_ticket": 0.4472111712178905,
+      "elasticidade_r2": 0.25086832769149925,
+      "pct_repetidores": 0.636448817053174,
+      "freq_media_repetida": 2.6062309674396813
+    },
+    "2011-09-30": {
+      "bgnbd": {
+        "r": 0.6968844823677207,
+        "alpha": 2.8656907839929655,
+        "a": 0.21490518470688344,
+        "b": 2.7446722844241114
+      },
+      "gamma_gamma": {
+        "p": 2.4670922588904873,
+        "q": 3.747619254480221,
+        "v": 426.2772414806589
+      },
+      "log_verossimilhanca_bgnbd": -26772.975934053502,
+      "log_verossimilhanca_gg": -19143.019093300732,
+      "n_clientes": 4453,
+      "corr_freq_ticket": 0.04455659541476457,
+      "ticket_populacional_gg": 382.7551000318902,
+      "ticket_m0_medio": 414.7679130249413,
+      "ticket_recompra_medio": 407.1702553907325,
+      "elasticidade_ticket": 0.43927778446710025,
+      "elasticidade_r2": 0.24549832464785515,
+      "pct_repetidores": 0.639344262295082,
+      "freq_media_repetida": 2.706040871322704
+    },
+    "2011-10-31": {
+      "bgnbd": {
+        "r": 0.7122483049079347,
+        "alpha": 2.93801083480906,
+        "a": 0.19782627397454147,
+        "b": 3.0766335695229623
+      },
+      "gamma_gamma": {
+        "p": 2.3870742668318616,
+        "q": 3.796395346496046,
+        "v": 451.9539452729333
+      },
+      "log_verossimilhanca_bgnbd": -29008.931741980134,
+      "log_verossimilhanca_gg": -20250.631904253718,
+      "n_clientes": 4677,
+      "corr_freq_ticket": 0.04729782466157007,
+      "ticket_populacional_gg": 385.7993948909899,
+      "ticket_m0_medio": 413.58649878147844,
+      "ticket_recompra_medio": 410.8874563010996,
+      "elasticidade_ticket": 0.4435636007884196,
+      "elasticidade_r2": 0.25131048312931636,
+      "pct_repetidores": 0.643147316655976,
+      "freq_media_repetida": 2.7962369039982895
+    },
+    "2011-11-30": {
+      "bgnbd": {
+        "r": 0.7292546717889146,
+        "alpha": 2.8672969185572446,
+        "a": 0.15394998385040257,
+        "b": 2.7597434908003513
+      },
+      "gamma_gamma": {
+        "p": 2.398547278906347,
+        "q": 3.8285161133163026,
+        "v": 450.8384096889095
+      },
+      "log_verossimilhanca_bgnbd": -31740.430761314077,
+      "log_verossimilhanca_gg": -21866.843596265408,
+      "n_clientes": 4870,
+      "corr_freq_ticket": 0.04816955147037571,
+      "ticket_populacional_gg": 382.3054907465096,
+      "ticket_m0_medio": 410.7743748780963,
+      "ticket_recompra_medio": 408.5958131444114,
+      "elasticidade_ticket": 0.442195371327898,
+      "elasticidade_r2": 0.2544626665937456,
+      "pct_repetidores": 0.6677618069815195,
+      "freq_media_repetida": 2.9921971252566735
+    }
+  }
+}
