@@ -140,6 +140,11 @@ testar** — é uma conta de otimização com uma resposta só, dada a base e a 
 **Elasticidade do ticket.** Responde uma pergunta prática: *se a safra entra com
 um ticket de primeira compra mais alto, quanto disso se mantém nas recompras?*
 
+Ela existe aqui por causa de uma escolha desta versão do projeto: o simulador
+tem uma alavanca de ticket de entrada, e alguma coisa precisa ligar essa
+alavanca ao ticket das recompras. Na entrega original da Petlove não havia esse
+controle, e portanto essa pergunta não era feita.
+
 A resposta não é um multiplicador, é um expoente:
 
 `ticket_recompra = ticket_recompra_médio × (ticket_M0 ÷ ticket_M0_médio) ^ elasticidade`

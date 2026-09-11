@@ -486,8 +486,10 @@ with abas[3]:
     st.divider()
     st.caption(
         f"A elasticidade que liga o slider de ticket à previsão de recompra "
-        f"vale {m_info['elasticidade_ticket']:.2f} e foi estimada nos dados — "
-        f"de onde ela sai está na aba **O case**.")
+        f"vale {m_info['elasticidade_ticket']:.2f} e foi estimada nos dados. "
+        f"Ela é um acréscimo desta versão — a entrega original não tinha "
+        f"alavanca de ticket, e por isso não tinha essa pergunta. De onde ela "
+        f"sai está na aba **O case**.")
 
 # ------------------------------------------------------------------ CASE ----
 with abas[4]:

@@ -85,6 +85,15 @@ há em que condicionar. Então a previsão troca a forma condicional pela
 - o ticket das recompras sai do histórico, corrigido pela elasticidade:
   `ticket_recompra = base × (ticket_M0 / ticket_M0_médio) ^ 0,44`.
 
+> **Este pedaço é acréscimo desta versão, não da entrega original.** Lá o
+> simulador projetava a safra nova a partir dos parâmetros do modelo, e pronto:
+> não havia controle de ticket, e portanto não havia a pergunta de como o ticket
+> de entrada se propaga para as recompras. Aqui eu quis a alavanca — e uma
+> alavanca de ticket que mexesse só no M0 deixaria a curva de 13 meses
+> praticamente parada, o que seria pior do que não ter alavanca nenhuma. Então a
+> pergunta apareceu junto com o controle, e a escolha era entre chutar esse
+> repasse e medi-lo. Preferi medir.
+
 Esse expoente 0,44 é o ponto que merece atenção. Ele não foi chutado: é uma
 regressão log-log no nível do cliente entre o ticket da 1ª compra e o ticket
 médio das recompras. Subir o ticket de entrada **não** sobe a recompra na mesma
@@ -149,7 +158,9 @@ estourava para ~97, o que equivale a dizer que ninguém nunca churna, e a
 projeção de M12 vinha inflada. A partir de 15 meses o ajuste estabiliza. Por
 isso o slider de data de corte começa em fev/2011 e não antes.
 
-**3. A elasticidade do ticket foi estimada no cliente, não na safra.** No nível
+**3. A elasticidade do ticket foi estimada no cliente, não na safra.** (Este
+item existe só porque esta versão acrescentou o controle de ticket no
+simulador — ver a seção da simulação.) No nível
 da safra sobram ~23 médias ruidosas e o coeficiente oscilava entre -0,03 e
 0,69 conforme o corte. No nível do cliente, com milhares de pontos, ele fica
 estável em 0,44 em todos os cortes. É a premissa que liga o slider do

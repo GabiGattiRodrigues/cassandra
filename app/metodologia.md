@@ -56,7 +56,7 @@ com os mesmos parâmetros.
 | Janela de calibração | **Minha decisão.** No mínimo 15 meses. Com 12, o parâmetro *b* estourava para ~97, o que equivale a dizer que ninguém nunca abandona, e o M12 vinha inflado. Decidido por estabilidade, não por erro. |
 | Unidade de tempo | **Minha decisão.** Mês de 30,4375 dias. Não muda o ajuste — só deixa os números legíveis em meses em vez de dias. |
 | Quem entra na base | **Minha decisão.** A safra 2009-12 ficou de fora, por censura à esquerda. Decidido pelo diagnóstico da própria safra (frequência 9,4 contra 3,9 das outras), não por tentativa e erro. |
-| Elasticidade do ticket | **Calculada**, mas deixada como **controle no simulador** — é a premissa mais frágil do conjunto (R² de {r2}) e quem usa merece poder mexer nela em vez de engolir o número. |
+| Elasticidade do ticket | **Calculada**, mas deixada como **controle no simulador** — é a premissa mais frágil do conjunto (R² de {r2}) e quem usa merece poder mexer nela em vez de engolir o número. Existe só porque esta versão acrescentou a alavanca de ticket no simulador; não fazia parte da entrega original. |
 
 O ponto da tabela: as minhas decisões existem, são poucas, e cada uma tem um
 motivo que não é "o erro ficou menor assim". Onde o erro entrou na decisão, ele
