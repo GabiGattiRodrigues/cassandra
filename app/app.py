@@ -498,6 +498,13 @@ with abas[4]:
                     "r2": f"{m_info['elasticidade_r2']:.2f}",
                 }))
     st.markdown("##### Os parâmetros são estáveis entre cortes?")
+    st.markdown(
+        "Um jeito direto de conferir se o modelo é confiável: refazer a conta "
+        "em datas diferentes e ver se ela dá respostas parecidas. Cada linha "
+        "abaixo é o modelo ajustado até uma data de corte diferente. Se os "
+        "números pulassem muito de uma linha para a outra, seria sinal de que "
+        "o modelo está sendo levado pelo ruído do período e não pelo "
+        "comportamento real dos clientes.")
     est = pd.DataFrame([{
         "Corte": mes_pt(c),
         "Clientes": meta["por_corte"][c]["n_clientes"],
@@ -514,13 +521,15 @@ with abas[4]:
     } for c in CORTES]).set_index("Corte")
     st.dataframe(est.round(3), use_container_width=True)
     st.caption(
-        "As colunas que importam são as duas razões, não os parâmetros crus. "
-        "**r/α** é a taxa média de compra por mês e **a/(a+b)** é a chance "
-        "média de abandono a cada compra — são elas que têm leitura de "
-        "negócio, e são bem mais estáveis entre cortes do que r, α, a e b "
-        "separados. A última coluna é o diagnóstico do Gamma-Gamma, que assume "
-        "independência entre frequência e ticket: o critério usual é "
-        "|corr| < 0,1.")
+        "As colunas que valem a leitura são as duas razões, não os parâmetros "
+        "crus. **r/α** é quantas compras por mês o cliente médio faz e "
+        "**a/(a+b)** é a chance de ele sumir depois de cada compra — essas "
+        "duas têm significado de negócio, e são bem mais estáveis entre os "
+        "cortes do que r, α, a e b separados (é comum dois pares diferentes "
+        "de números levarem à mesma razão). A última coluna é o teste do "
+        "Gamma-Gamma: ele só vale se quem compra mais não tiver "
+        "sistematicamente um ticket diferente de quem compra menos, e o "
+        "critério usual é ficar abaixo de 0,1.")
 
 # ------------------------------------------------------------- GLOSSARIO ----
 with abas[5]:
