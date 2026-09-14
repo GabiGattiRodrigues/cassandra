@@ -38,15 +38,19 @@ AZUL_ESC = "#0d366b"
 HACHURA = "/"
 
 LAYOUT = dict(
-    title_x=0, title_xanchor="left", title_y=0.97,
+    # titulo encostado no topo da margem; a legenda vai para a direita, na
+    # mesma faixa. se as duas ficarem a esquerda uma escreve por cima da outra
+    # assim que o titulo passa de meia dezena de palavras.
+    title_x=0, title_xanchor="left", title_y=1.0, title_yanchor="top",
+    title_pad=dict(t=10, b=0),
     paper_bgcolor=SUPERFICIE,
     plot_bgcolor=SUPERFICIE,
     font=dict(family='system-ui, -apple-system, "Segoe UI", sans-serif',
               size=13, color=TINTA_2),
-    margin=dict(l=58, r=16, t=52, b=46),
+    margin=dict(l=58, r=16, t=74, b=46),
     hoverlabel=dict(bgcolor="white", font_size=13, bordercolor=EIXO),
-    legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                xanchor="left", x=0, title_text=""),
+    legend=dict(orientation="h", yanchor="bottom", y=1.0,
+                xanchor="right", x=1, title_text=""),
     xaxis=dict(showgrid=False, linecolor=EIXO, ticks="outside",
                tickcolor=EIXO, tickfont=dict(color=TINTA_MUDA)),
     yaxis=dict(gridcolor=GRADE, zerolinecolor=EIXO, linecolor="rgba(0,0,0,0)",

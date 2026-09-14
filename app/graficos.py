@@ -348,11 +348,17 @@ def matriz_mape(mape: pd.DataFrame, vies: pd.DataFrame | None = None,
     )
 
     layout = dict(T.LAYOUT)
-    layout["margin"] = dict(l=76, r=16, t=58, b=16)
+    # o eixo x fica no topo e mora dentro da margem superior, junto com o
+    # titulo. quando o rotulo tem subtitulo ele ocupa duas linhas, entao a
+    # margem precisa caber titulo + duas linhas, senao um escreve por cima
+    # do outro.
+    topo = 104 if sub_col else 76
+    layout["margin"] = dict(l=76, r=16, t=topo, b=16)
     fig.update_layout(
-        **layout, height=104 + 34 * ny,
+        **layout, height=50 + topo + 34 * ny,
         title=dict(text=titulo or "Erro da previsão (MAPE) por safra e mês",
-                   font=dict(size=15, color=T.TINTA)),
+                   font=dict(size=15, color=T.TINTA),
+                   y=1.0, yanchor="top", pad=dict(t=14, b=0)),
     )
     # o rotulo da coluna pode carregar um subtitulo (ex.: quantas safras
     # entram naquele mes), em fonte menor na linha de baixo
@@ -401,8 +407,12 @@ def curva_simulada(sim: pd.DataFrame, agg_real: pd.DataFrame, coluna: str,
                                 line=dict(color=T.SUPERFICIE, width=2)),
                     name="safra simulada",
                     hovertemplate="M%{x}<br>simulado: %{y:,.0f}<extra></extra>")
+    lay = dict(T.LAYOUT)
+    # esta figura mora numa coluna estreita: a legenda quebra em duas linhas,
+    # entao a margem de cima tem que caber titulo + duas linhas de legenda
+    lay["margin"] = dict(l=58, r=16, t=106, b=46)
     fig.update_layout(
-        **T.LAYOUT, height=420, hovermode="x unified",
+        **lay, height=440, hovermode="x unified",
         title=dict(text="Safra simulada contra o histórico",
                    font=dict(size=15, color=T.TINTA)),
     )
