@@ -9,14 +9,16 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+import i18n
 import tema as T
+from i18n import L
 
 
 def _fmt(v, formato):
     try:
-        return formato.format(v)
+        return i18n.fmt(formato, v)
     except Exception:
-        return f"{v:,.0f}"
+        return i18n.num(v)
 
 
 def _clarear(hex_cor, f=0.55):
@@ -57,17 +59,20 @@ def barras_empilhadas(seg: pd.DataFrame, formato="R$ {:,.0f}",
                 custom.append([nome, _fmt(float(total.get(s, 0)), formato)])
             if not any(v > 0 for v in vals):
                 continue
+            tipo_txt = (L("realizado", "actual") if tipo == "realizado"
+                        else L("previsto", "forecast"))
             fig.add_bar(
-                x=safras, y=vals, name=f"{nome} · {tipo}", width=0.7,
+                x=safras, y=vals, name=f"{nome} · {tipo_txt}", width=0.7,
                 customdata=custom, showlegend=False,
                 marker=dict(
                     color=cor if tipo == "realizado" else _clarear(cor, 0.6),
                     line=dict(color=T.SUPERFICIE, width=1.5),
                     pattern=dict(shape="" if tipo == "realizado" else T.HACHURA,
                                  fgcolor=cor, size=5, solidity=0.32)),
-                hovertemplate=("<b>safra %{x}</b><br>"
-                               f"%{{customdata[0]}} · {tipo}: %{{y:,.0f}}<br>"
-                               "total em M12: %{customdata[1]}<extra></extra>"),
+                hovertemplate=("<b>" + L("safra", "vintage") + " %{x}</b><br>"
+                               f"%{{customdata[0]}} · {tipo_txt}: %{{y:,.0f}}<br>"
+                               + L("total em M12", "total at M12")
+                               + ": %{customdata[1]}<extra></extra>"),
             )
 
     # o acumulado final escrito em cima de cada barra
@@ -122,7 +127,8 @@ def barras_camadas(agg: pd.DataFrame, coluna: str, formato="R$ {:,.0f}",
                 line=dict(color=T.SUPERFICIE, width=1.5),
                 pattern=dict(shape=["" if o else T.HACHURA for o in obs],
                              fgcolor=cor, size=5, solidity=0.32)),
-            hovertemplate="<b>safra %{x}</b> · nível em M" + str(k)
+            hovertemplate="<b>" + L("safra", "vintage") + " %{x}</b> · "
+                          + L("nível em M", "level at M") + str(k)
                           + "<br>%{y:,.0f}<extra></extra>",
         )
     # o rotulo vai acima do TOPO da barra, que nem sempre e o M12: quando o
@@ -171,18 +177,20 @@ def linhas_por_safra(agg: pd.DataFrame, coluna: str, safras: list[str],
             name=s, legendgroup=s, line=dict(color=cor, width=2),
             marker=dict(size=7, color=cor,
                         line=dict(color=T.SUPERFICIE, width=2)),
-            hovertemplate=f"<b>{s}</b> · M%{{x}}<br>realizado: "
-                          "%{y:,.0f}<extra></extra>",
+            hovertemplate=f"<b>{s}</b> · M%{{x}}<br>"
+                          + L("realizado", "actual") + ": %{y:,.0f}<extra></extra>",
         )
         # previsto (comeca no ultimo ponto realizado para nao dar buraco)
         if corte < len(d):
             ini = max(corte - 1, 0)
             fig.add_scatter(
                 x=d["m"][ini:], y=d[coluna][ini:], mode="lines",
-                name=f"{s} (previsto)", legendgroup=s, showlegend=False,
+                name=f"{s} ({L('previsto', 'forecast')})", legendgroup=s,
+                showlegend=False,
                 line=dict(color=cor, width=2, dash="dot"), opacity=0.75,
-                hovertemplate=f"<b>{s}</b> · M%{{x}}<br>previsto: "
-                              "%{y:,.0f}<extra></extra>",
+                hovertemplate=f"<b>{s}</b> · M%{{x}}<br>"
+                              + L("previsto", "forecast")
+                              + ": %{y:,.0f}<extra></extra>",
             )
         # rotulo direto na ponta
         fig.add_scatter(
@@ -194,7 +202,8 @@ def linhas_por_safra(agg: pd.DataFrame, coluna: str, safras: list[str],
 
     fig.add_annotation(x=1, y=-0.16, xref="paper", yref="paper",
                        showarrow=False, xanchor="right",
-                       text="linha cheia = realizado · pontilhada = previsão",
+                       text=L("linha cheia = realizado · pontilhada = previsão",
+                              "solid line = actual · dotted = forecast"),
                        font=dict(size=11, color=T.TINTA_MUDA))
     fig.update_layout(
         **T.LAYOUT, hovermode="x unified", height=440,
@@ -226,15 +235,17 @@ def barras_comparando_safras(agg: pd.DataFrame, m: int, coluna: str,
         realizado = d["frac_observada"] > 0.999
 
     fig = go.Figure()
-    for rotulo, mask in [("Realizado", realizado), ("Previsto", ~realizado)]:
+    for chave, mask in [("Realizado", realizado), ("Previsto", ~realizado)]:
         if not mask.any():
             continue
-        cor = T.AZUL_ESC if rotulo == "Realizado" else _clarear(T.AZUL_ESC)
+        rotulo = (L("Realizado", "Actual") if chave == "Realizado"
+                  else L("Previsto", "Forecast"))
+        cor = T.AZUL_ESC if chave == "Realizado" else _clarear(T.AZUL_ESC)
         fig.add_bar(
             x=d["safra"][mask.to_numpy()], y=valores[mask.to_numpy()],
             name=rotulo,
             marker=dict(color=cor, line=dict(color=T.SUPERFICIE, width=2),
-                        pattern=dict(shape="" if rotulo == "Realizado" else T.HACHURA,
+                        pattern=dict(shape="" if chave == "Realizado" else T.HACHURA,
                                      fgcolor=T.AZUL_ESC, size=5, solidity=0.28)),
             text=[_fmt(v, formato) for v in valores[mask.to_numpy()]],
             textposition="outside", textfont=dict(size=11, color=T.TINTA_2),
@@ -244,13 +255,15 @@ def barras_comparando_safras(agg: pd.DataFrame, m: int, coluna: str,
         )
     media = float(np.nanmean(valores)) if len(valores) else 0
     fig.add_hline(y=media, line=dict(color=T.TINTA_MUDA, width=1, dash="dash"),
-                  annotation_text=f"média {_fmt(media, formato)}",
+                  annotation_text=f"{L('média', 'average')} {_fmt(media, formato)}",
                   annotation_position="top left",
                   annotation_font=dict(size=11, color=T.TINTA_MUDA))
     fig.update_layout(
         **T.LAYOUT, height=420, bargap=0.3,
-        title=dict(text=(f"{'Acumulado até' if coluna != 'ticket' else 'Nível em'}"
-                         f" M{m}, safra a safra"),
+        title=dict(text=(L(f"{'Acumulado até' if coluna != 'ticket' else 'Nível em'}"
+                           f" M{m}, safra a safra",
+                           f"{'Cumulative up to' if coluna != 'ticket' else 'Level at'}"
+                           f" M{m}, vintage by vintage")),
                    font=dict(size=15, color=T.TINTA)),
     )
     fig.update_xaxes(type="category")     # ver nota em barras_empilhadas
@@ -260,9 +273,9 @@ def barras_comparando_safras(agg: pd.DataFrame, m: int, coluna: str,
 # --------------------------------------------------------------------------- #
 def matriz_mape(mape: pd.DataFrame, vies: pd.DataFrame | None = None,
                 rot_col=None, titulo=None,
-                nome_col="mês", extra=None, rot_extra="viés",
+                nome_col=None, extra=None, rot_extra=None,
                 extra2=None, rot_extra2=None, extra3=None, rot_extra3=None,
-                margens=False, rot_margem="média", sub_col=None):
+                margens=False, rot_margem=None, sub_col=None):
     """
     Matriz safra x (mes ou corte) com o erro da previsao. Cada celula traz o
     numero escrito - a cor e reforco, nunca a unica informacao.
@@ -271,6 +284,9 @@ def matriz_mape(mape: pd.DataFrame, vies: pd.DataFrame | None = None,
     ou "fev/11" e lido como data pelo plotly, o que desalinha as celulas do
     fundo em relacao aos retangulos desenhados por cima.
     """
+    nome_col = nome_col or L("mês", "month")
+    rot_extra = rot_extra or L("viés", "bias")
+    rot_margem = rot_margem or L("média", "average")
     if rot_col is None:
         # as colunas de margem sao texto e nao levam o prefixo "M"
         rot_col = lambda c: f"M{c}" if isinstance(c, (int, np.integer)) else str(c)
@@ -334,10 +350,12 @@ def matriz_mape(mape: pd.DataFrame, vies: pd.DataFrame | None = None,
     fig.add_heatmap(
         z=z[::-1], x=list(range(nx)), y=[y_pos(i) for i in range(ny)][::-1],
         showscale=False, opacity=0, customdata=cd[::-1],
-        hovertemplate=("safra <b>%{customdata[2]}</b> · " + nome_col
-                       + " %{customdata[3]}<br>"
-                       "erro absoluto: %{z:.1f}%<br>"
-                       "viés: %{customdata[0]:+.1f}% (positivo = previu a mais)"
+        hovertemplate=(L("safra", "vintage") + " <b>%{customdata[2]}</b> · "
+                       + nome_col + " %{customdata[3]}<br>"
+                       + L("erro absoluto", "absolute error") + ": %{z:.1f}%<br>"
+                       + L("viés", "bias") + ": %{customdata[0]:+.1f}% ("
+                       + L("positivo = previu a mais",
+                           "positive = over-forecast") + ")"
                        + ("<br>" + rot_extra + ": %{customdata[1]:.0f}"
                           if extra is not None else "")
                        + ("<br>" + str(rot_extra2) + ": %{customdata[4]:.1f}%"
@@ -356,7 +374,8 @@ def matriz_mape(mape: pd.DataFrame, vies: pd.DataFrame | None = None,
     layout["margin"] = dict(l=76, r=16, t=topo, b=16)
     fig.update_layout(
         **layout, height=50 + topo + 34 * ny,
-        title=dict(text=titulo or "Erro da previsão (MAPE) por safra e mês",
+        title=dict(text=titulo or L("Erro da previsão (MAPE) por safra e mês",
+                                    "Forecast error (MAPE) by vintage and month"),
                    font=dict(size=15, color=T.TINTA),
                    y=1.0, yanchor="top", pad=dict(t=14, b=0)),
     )
@@ -394,26 +413,31 @@ def curva_simulada(sim: pd.DataFrame, agg_real: pd.DataFrame, coluna: str,
     fig.add_scatter(x=faixa["m"], y=faixa["min"], mode="lines",
                     line=dict(width=0), fill="tonexty",
                     fillcolor="rgba(42,120,214,0.13)",
-                    name="faixa das safras reais",
-                    hovertemplate="M%{x}<br>piso das safras reais: "
-                                  "%{y:,.0f}<extra></extra>")
+                    name=L("faixa das safras reais", "range of real vintages"),
+                    hovertemplate="M%{x}<br>"
+                                  + L("piso das safras reais",
+                                      "floor of real vintages")
+                                  + ": %{y:,.0f}<extra></extra>")
     fig.add_scatter(x=faixa["m"], y=faixa["median"], mode="lines",
                     line=dict(color=T.AZUL, width=2, dash="dash"),
-                    name="mediana das safras reais",
-                    hovertemplate="M%{x}<br>mediana real: %{y:,.0f}<extra></extra>")
+                    name=L("mediana das safras reais", "median of real vintages"),
+                    hovertemplate="M%{x}<br>" + L("mediana real", "real median")
+                                  + ": %{y:,.0f}<extra></extra>")
     fig.add_scatter(x=sim["m"], y=sim[coluna], mode="lines+markers",
                     line=dict(color=T.AZUL_ESC, width=3),
                     marker=dict(size=8, color=T.AZUL_ESC,
                                 line=dict(color=T.SUPERFICIE, width=2)),
-                    name="safra simulada",
-                    hovertemplate="M%{x}<br>simulado: %{y:,.0f}<extra></extra>")
+                    name=L("safra simulada", "simulated vintage"),
+                    hovertemplate="M%{x}<br>" + L("simulado", "simulated")
+                                  + ": %{y:,.0f}<extra></extra>")
     lay = dict(T.LAYOUT)
     # esta figura mora numa coluna estreita: a legenda quebra em duas linhas,
     # entao a margem de cima tem que caber titulo + duas linhas de legenda
     lay["margin"] = dict(l=58, r=16, t=106, b=46)
     fig.update_layout(
         **lay, height=440, hovermode="x unified",
-        title=dict(text="Safra simulada contra o histórico",
+        title=dict(text=L("Safra simulada contra o histórico",
+                          "Simulated vintage against history"),
                    font=dict(size=15, color=T.TINTA)),
     )
     fig.update_xaxes(tickmode="array", tickvals=list(range(13)),
@@ -428,20 +452,25 @@ def dispersao_elasticidade(cli_tab: pd.DataFrame, beta: float, r2: float):
     fig.add_scatter(x=d["ticket_m0"], y=d["ticket_recompra"], mode="markers",
                     marker=dict(size=5, color=T.AZUL, opacity=0.35,
                                 line=dict(width=0)),
-                    name="clientes",
-                    hovertemplate="1ª compra: %{x:,.0f}<br>"
-                                  "recompra média: %{y:,.0f}<extra></extra>")
+                    name=L("clientes", "customers"),
+                    hovertemplate=L("1ª compra", "1st purchase") + ": %{x:,.0f}<br>"
+                                  + L("recompra média", "average repeat")
+                                  + ": %{y:,.0f}<extra></extra>")
     xs = np.geomspace(max(d["ticket_m0"].min(), 1), d["ticket_m0"].max(), 60)
     alpha = np.log(d["ticket_recompra"]).mean() - beta * np.log(d["ticket_m0"]).mean()
     fig.add_scatter(x=xs, y=np.exp(alpha) * xs ** beta, mode="lines",
                     line=dict(color=T.AZUL_ESC, width=2.5),
-                    name=f"ajuste: elasticidade {beta:.2f} (R²={r2:.2f})",
+                    name=L(f"ajuste: elasticidade {beta:.2f} (R²={r2:.2f})",
+                           f"fit: elasticity {beta:.2f} (R²={r2:.2f})"),
                     hoverinfo="skip")
     fig.update_layout(**T.LAYOUT, height=380,
-                      title=dict(text="Ticket de entrada × ticket de recompra",
+                      title=dict(text=L("Ticket de entrada × ticket de recompra",
+                                        "Entry ticket × repeat ticket"),
                                  font=dict(size=15, color=T.TINTA)))
-    fig.update_xaxes(type="log", title="ticket da 1ª compra (log)",
+    fig.update_xaxes(type="log", title=L("ticket da 1ª compra (log)",
+                                         "1st-purchase ticket (log)"),
                      title_font=dict(size=12, color=T.TINTA_MUDA))
-    fig.update_yaxes(type="log", title="ticket médio das recompras (log)",
+    fig.update_yaxes(type="log", title=L("ticket médio das recompras (log)",
+                                         "average repeat ticket (log)"),
                      title_font=dict(size=12, color=T.TINTA_MUDA))
     return fig

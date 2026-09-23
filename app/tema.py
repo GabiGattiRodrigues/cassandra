@@ -58,6 +58,11 @@ LAYOUT = dict(
 )
 
 
+FAIXAS_MAPE_EN = ["Up to 5% — on target", "5% to 10% — low error",
+                  "10% to 20% — good enough to plan",
+                  "Above 20% — don't use alone"]
+
+
 def cor_da_faixa(v):
     try:
         v = float(v)

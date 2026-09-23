@@ -6,6 +6,10 @@ previsão convivem no mesmo gráfico, e uma safra que ainda não existe pode ser
 simulada.
 
 🔗 **App:** https://cassandra-clv.streamlit.app
+🌐 **Português / English:** botão PT/EN na barra lateral, e `?lang=en` no link
+abre direto em inglês. Os textos longos têm arquivo irmão em inglês
+(`app/metodologia_en.md`, `glossario_en.md`, `case_en.md`); o número é o mesmo
+nas duas línguas, só muda o separador.
 📊 **Base:** [Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii) (UCI) — varejo online UK, 2009–2011
 
 <p align="center"><img src="app/assets/cassandra.svg" width="520"></p>
